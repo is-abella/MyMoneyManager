@@ -2,42 +2,30 @@ import { useState } from 'react'
 import useOnlineStatus from './hooks/useOnlineStatus'
 import Offline from './components/Offline'
 import InstallPrompt from './components/InstallPrompt'
+import {BrowserRouter, Route, Routes, Link} from 'react-router-dom'
+import Dashboard from './pages/Dashboard'
+import Expenses from './pages/Expenses'
+import Budgets from './pages/Budgets'
+import Navbar from './components/Navbar'
+import AppShell from './components/layout/AppShell'
 
 function App() {
   const isOnline = useOnlineStatus()
 
   return (
-      <div className="App">
+    <BrowserRouter>
+      <AppShell>
+        <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/budgets" element={<Budgets />} />
+        </Routes>
 
-      {/*
-      {!isOnline && ( #shorthand for if (!isOnline) { return... } 
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          width: '100%',
-          backgroundColor: '#ec9494',
-          color: 'white',
-          padding: '10px',
-          textAlign: 'center',
-          zIndex: 1000
-        }}>
-          ⚠️ You are currently offline
-        </div>
-      )} */}
-      
-      {!isOnline ? ( /* condition ? valueIfTrue : valueIfFalse */
-        <Offline />
-      ) : (
-        <>
-          <h1>My First PWA</h1>
-          <p>You're online! All features are available.</p>
-          {/* Add the rest of your app content here */}
-        </>
-      )}
+        <Navbar />
+      </AppShell>
+    </BrowserRouter>
 
-      <InstallPrompt />
 
-    </div>
   );
 }
 
