@@ -128,3 +128,9 @@
     @apply font-mono;
     }
 }
+
+:root {
+  --budget-low: #1c8514;
+  --budget-mid: #cc870f;
+  --budget-high: #7f0707;
+}
