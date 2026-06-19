@@ -1,0 +1,92 @@
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
+
+/* Budget
+  {
+    id: 'b1',
+    category_id: '2',
+    amount_dollars: 500.00,
+    start_datetime: '2026-06-01T00:00:00.000Z',
+    end_datetime: '2026-06-30T23:59:59.999Z',
+    is_recurring: true,
+  },
+  Transaction
+    {
+    id: 't1',
+    category_id: '1',
+    type: 'expense',
+    amount_dollars: 8.80,
+    notes: 'Snack',
+    transaction_datetime: '2026-06-18T12:30:00.000Z',
+    is_recurring: false,
+  },
+
+*/
+//for each budget, query transactions matching category within timeframe. Add up total. 
+export default function BudgetCard({ budget, amount_spent, category_name}) {
+    const progress = amount_spent / budget.amount_dollars
+    const start = new Date(budget.start_datetime)
+    const end = new Date(budget.end_datetime)
+    const now = new Date()
+    const timeProgress =(now - start) / (end - start)
+    const clampedTime = Math.min(Math.max(timeProgress, 0), 1)
+
+    const getProgressColor = () => {
+        if (progress > 1) return "[&>div]:bg-[var(--budget-high)]"
+        if (progress > 0.8) return "[&>div]:bg-[var(--budget-mid)]"
+        return "[&>div]:bg-[var(--budget-low)]"
+    }
+
+    return (
+        <Card className="p-2">
+            <div className="flex justify-between mb-0">
+                <div className = "flex items-center gap-2">
+                    <p className="text-sm font-semibold">{category_name}</p>
+                    <p className="text-sm text-gray-600 align-right"> ${budget.amount_dollars.toFixed(2)}</p>
+                </div>
+                
+                <p className="text-sm text-gray-600 align-right"> {progress.toFixed(2)*100}% </p>
+            </div>
+ 
+            <Progress
+                value={Math.min(progress * 100, 100)}
+                className= {`h-2 ${getProgressColor()}`}
+            />
+            <div className="space-y-1.5">
+                <div className="relative h-1 w-full flex items-center">
+                    <div className="h-0.5 bg-gray-300" style={{ width: `${clampedTime * 100}%` }}/>
+                    <div className="flex-1 h-1.5 bg-[radial-gradient(gray_1px,transparent_1px)] bg-[length:6px_6px] opacity-50" />
+                </div>
+
+                <div className="flex justify-between text-xs text-gray-400">
+                    <span>{formatDate(budget.start_datetime)}</span>
+                    <span>{formatDate(budget.end_datetime)}</span>
+                </div>
+            </div>
+
+
+        </Card>
+    )
+}
+
+export function getSpentForBudget(budget, transactions) {
+  return transactions
+    .filter(t =>
+      t.category_id === budget.category_id &&
+      t.transaction_datetime >= budget.start_datetime &&
+      t.transaction_datetime <= budget.end_datetime
+    )
+    .reduce((sum, t) => sum + t.amount_dollars, 0)
+}
+
+export function formatDate(dateString) {
+  const date = new Date(dateString)
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  })
+}
+
+

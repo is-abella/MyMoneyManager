@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import useOnlineStatus from './hooks/useOnlineStatus'
-import Offline from './components/Offline'
-import InstallPrompt from './components/InstallPrompt'
 import {BrowserRouter, Route, Routes, Link} from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Expenses from './pages/Expenses'
