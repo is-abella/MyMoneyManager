@@ -1,4 +1,3 @@
-import {Progress} from "@/components/ui/Progress";
 import {budgets, transactions, categories} from "@/dummydata/data.js";
 import { getSpentForBudget } from "@/components/BudgetCard"; 
 import BudgetCard from "@/components/BudgetCard";
