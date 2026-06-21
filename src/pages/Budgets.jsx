@@ -1,6 +1,7 @@
 import {budgets, transactions, categories} from "@/dummydata/data.js";
 import { getSpentForBudget } from "@/components/BudgetCard"; 
 import BudgetCard from "@/components/BudgetCard";
+import { Button } from "@/components/ui/button";
 
 
 
@@ -11,6 +12,9 @@ function Budgets() {
 
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold mb-4">Budgets</h1>
+        <Button variant="default" size="sm" onClick={() => window.location.href = "/new-budget"}>
+          New Budget
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">

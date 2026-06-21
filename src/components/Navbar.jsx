@@ -5,25 +5,25 @@ function Navbar() {
   const location = useLocation()
 
   const item = (path) =>
-    `flex flex-col items-center text-xs ${
+    `flex flex-col items-center text-sm ${
       location.pathname === path ? "text-black" : "text-gray-500"
     }`
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t bg-white flex justify-around py-3">
+    <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t bg-white flex justify-around py-4 pb-6">
 
       <Link to="/" className={item("/")}>
-        <Home size={20} />
+        <Home size={23} />
         Home
       </Link>
 
       <Link to="/expenses" className={item("/expenses")}>
-        <BanknoteArrowDown size={20} />
+        <BanknoteArrowDown size={23} />
         Expenses
       </Link>
 
       <Link to="/budgets" className={item("/budgets")}>
-        <PiggyBank size={20} />
+        <PiggyBank size={23} />
         Budgets
       </Link>
 

@@ -1,5 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
 
 /* Budget
   {
@@ -43,6 +44,10 @@ export default function BudgetCard({ budget, amount_spent, category_name}) {
                 <div className = "flex items-center gap-2">
                     <p className="text-sm font-semibold">{category_name}</p>
                     <p className="text-sm text-gray-600 align-right"> ${budget.amount_dollars.toFixed(2)}</p>
+                    {budget.is_recurring && (
+                       <Badge variant="secondary" className="text-xs">Recurring</Badge>
+                    )}
+                    {/*How do i make it not show a badge for non-recurring*/}
                 </div>
                 
                 <p className="text-sm text-gray-600 align-right"> {progress.toFixed(2)*100}% </p>
