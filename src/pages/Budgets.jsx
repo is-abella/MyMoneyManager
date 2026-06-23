@@ -1,14 +1,126 @@
-import {budgets, transactions, categories} from "@/dummydata/data.js";
+import { useEffect, useState, useMemo } from "react"
 import { getSpentForBudget } from "@/components/BudgetCard"; 
 import BudgetCard from "@/components/BudgetCard";
 import { Button } from "@/components/ui/button";
-
-
+import { createClient } from "@/lib/supabase/client"
+import SwipeBudgetCard from "@/components/SwipeBudegtCard";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 function Budgets() {
+  const [budgets, setBudgets] = useState([])
+  const [transactions, setTransaction] = useState([])
+  const [categories, setCategories] = useState([])
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
+
+  const supabase = createClient()
+
+
+  useEffect(() => { // useEffect lets u run code after rendering to avoid infinite running. [] is dependency array, means run exactly once when component first mounts.
+    fetchBudgets()
+  }, [])
+
+  useEffect(()=> {
+    fetchTransactions()
+  }, [])
+
+  useEffect(()=> {
+    fetchCategories()
+  }, [])
+
+  async function fetchBudgets() {
+    const { data, error } = await supabase
+      .from("budgets")
+      .select("*")
+      console.log(data)
+
+    if (error) {
+      console.error(error)
+      return
+    }
+    setBudgets(data)
+    
+  }
+
+  async function fetchTransactions() {
+  const { data, error } = await supabase
+      .from("transactions")
+      .select("*")
+      console.log(data)
+
+    if (error) {
+      console.error(error)
+      return
+    }
+      setTransaction(data)
+  }
+
+  async function fetchCategories() {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      console.log(data)
+
+    if (error) {
+      console.error(error)
+      return
+    }
+      setCategories(data)
+  }
+
+  const sortedBudgets = useMemo(() => {
+    if (!budgets.length || !transactions.length) return []
+
+    return budgets
+      .map((budget) => {
+        const spent = getSpentForBudget(budget, transactions) //in cents
+        const total = budget.amount_cents || 1
+
+        return {
+          ...budget,
+          spent,
+          progress: spent / total,
+        }
+      })
+      .sort((a, b) => b.progress - a.progress)
+  }, [budgets, transactions])
+
+  const handleDeleteClick = (id) => {
+    setDeleteId(id)
+    setOpenDeleteDialog(true)
+
+  }
+  const confirmDelete = async () => {
+    const query = supabase
+      .from("budgets")
+      .delete()
+      .eq("id", deleteId)
+    console.log("Supabase query:", query)
+
+    const {error} = await query
+    if (error) {
+      console.error(error)
+    }
+
+    setBudgets(prev => prev.filter(b=> b.id !==deleteId))
+    setOpenDeleteDialog(false)
+    setDeleteId(null)
+  }
+
+
 
   return (
-    <div className="p-4">
+    <div className="p-4 pb-24 overflow-y-auto">
 
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold mb-4">Budgets</h1>
@@ -18,15 +130,42 @@ function Budgets() {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {budgets.map((budget) => {
-          const amount_spent = getSpentForBudget(budget, transactions);
-          const category_name = categories.find(c => c.id === budget.category_id)?.name;
+        {sortedBudgets.map((budget) => {
+          const category_name = categories.find(c => c.id === budget.category_id)?.category_name;
           return (
-            <BudgetCard budget={budget} amount_spent={amount_spent} key={budget.id} category_name={category_name}/>
+
+            <SwipeBudgetCard key={budget.id}
+              onEdit={()=> console.log("edit", budget.id)} //DO THIS TMR
+              onDelete={()=> handleDeleteClick(budget.id)}
+            >
+              <BudgetCard budget={budget} amount_spent={budget.spent} category_name={category_name}/>
+            </SwipeBudgetCard>
           );
         })}
+        <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete budget?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently remove this budget.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
 
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteId(null)}>
+                Cancel
+              </AlertDialogCancel>
 
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
 

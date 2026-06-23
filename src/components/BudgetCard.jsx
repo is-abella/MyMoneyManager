@@ -2,30 +2,10 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 
-/* Budget
-  {
-    id: 'b1',
-    category_id: '2',
-    amount_dollars: 500.00,
-    start_datetime: '2026-06-01T00:00:00.000Z',
-    end_datetime: '2026-06-30T23:59:59.999Z',
-    is_recurring: true,
-  },
-  Transaction
-    {
-    id: 't1',
-    category_id: '1',
-    type: 'expense',
-    amount_dollars: 8.80,
-    notes: 'Snack',
-    transaction_datetime: '2026-06-18T12:30:00.000Z',
-    is_recurring: false,
-  },
 
-*/
 //for each budget, query transactions matching category within timeframe. Add up total. 
-export default function BudgetCard({ budget, amount_spent, category_name}) {
-    const progress = amount_spent / budget.amount_dollars
+export default function BudgetCard({ budget, amount_spent, category_name}) { 
+    const progress = amount_spent / budget.amount_cents // both in cents
     const start = new Date(budget.start_datetime)
     const end = new Date(budget.end_datetime)
     const now = new Date()
@@ -43,7 +23,7 @@ export default function BudgetCard({ budget, amount_spent, category_name}) {
             <div className="flex justify-between mb-0">
                 <div className = "flex items-center gap-2">
                     <p className="text-sm font-semibold">{category_name}</p>
-                    <p className="text-sm text-gray-600 align-right"> ${budget.amount_dollars.toFixed(2)}</p>
+                    <p className="text-sm text-gray-600 align-right"> ${(budget.amount_cents/100).toFixed(2)}</p>
                     {budget.is_recurring && (
                        <Badge variant="secondary" className="text-xs">Recurring</Badge>
                     )}
@@ -81,7 +61,7 @@ export function getSpentForBudget(budget, transactions) {
       t.transaction_datetime >= budget.start_datetime &&
       t.transaction_datetime <= budget.end_datetime
     )
-    .reduce((sum, t) => sum + t.amount_dollars, 0)
+    .reduce((sum, t) => sum + t.amount_cents, 0)
 }
 
 export function formatDate(dateString) {
