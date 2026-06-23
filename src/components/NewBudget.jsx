@@ -34,19 +34,111 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
-import {categories} from "@/dummydata/data.js"
+import { categoryDict } from "@/dummydata/data.js"
+import { createClient } from "@/lib/supabase/client"
+import { useNavigate } from "react-router-dom"
 
+function calculateEndDate(startDate, duration) {
+  const end = new Date(startDate)
+  switch (duration) {
+    case "1 Week":
+      end.setDate(end.getDate() + 7)
+      break
+
+    case "2 Weeks":
+      end.setDate(end.getDate() + 14)
+      break
+
+    case "1 Month":
+      end.setMonth(end.getMonth() + 1)
+      break
+
+    case "2 Months":
+      end.setMonth(end.getMonth() + 2)
+      break
+
+    case "3 Months":
+      end.setMonth(end.getMonth() + 3)
+      break
+
+    case "6 Months":
+      end.setMonth(end.getMonth() + 6)
+      break
+
+    case "1 Year":
+      end.setFullYear(end.getFullYear() + 1)
+      break
+
+    default:
+      return null
+  }
+  return end
+}
 
 export default function NewBudget() {
+    const navigate = useNavigate()
+    const supabase = createClient()
+    const [categories, setCategories] = useState([])
     const [date, setDate] = useState(null)
-    const [selectedCategory, setCategory] = useState(null)
+    const [selectedCategory, setSelectedCategory] = useState(null)
+    const [budgetAmount, setBudgetAmount] = useState(0)
+    const [duration, setDuration] = useState("1 Month")
+    const [isRecurring, setRecurring] = useState(false)
     const [drawerOpen, setOpen] = useState(false)
+
+    useEffect(()=> {
+        fetchCategories()
+    }, [])
+
+    async function fetchCategories() {
+        const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        console.log(data)
+
+        if (error) {
+        console.error(error)
+        return
+        }
+        setCategories(data)
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault()
+        //const formData = new formData(e.target)
+        const amount = Math.round(Number(budgetAmount)*100)
+        const start_date = date.toISOString()// how to save as timestampz?
+        const end_date = calculateEndDate(date, duration).toISOString()
+
+        console.log(amount)
+        console.log(selectedCategory.id)
+        console.log(start_date)
+        console.log(end_date)
+        console.log(isRecurring)
+        console.log(duration)
+
+        const payload = {
+            category_id: selectedCategory.id,
+            amount_cents: amount,
+            start_datetime: start_date,
+            end_datetime: end_date,
+            duration: duration,
+            is_recurring: isRecurring
+        }
+
+        const {error} = await supabase.from("budgets").insert([payload])
+        if (error) {
+            console.error(error)
+            return
+        }
+        navigate("/budgets")
+    }
     
     return (
         <div className="w-full max-w-md p-5">
-            <form>
+            <form onSubmit = {handleSubmit}>
                 <FieldGroup className="grid max-w-sm grid-cols-2 pb-5">
                     <Field>
                         <FieldLabel>Category</FieldLabel>
@@ -54,7 +146,7 @@ export default function NewBudget() {
                             <DrawerTrigger asChild>
                                 <Button variant="outline" className = "justify-start">
                                     {selectedCategory? 
-                                    (<div className = "flex items-center gap-1.5"><img src={selectedCategory.icon}/><span>{selectedCategory.name}</span></div>) 
+                                    (<div className = "flex items-center gap-1.5"><img src={categoryDict[selectedCategory.id]}/><span>{selectedCategory.category_name}</span></div>) 
                                     : ("Select Category")}
                                 </Button>
                             </DrawerTrigger>
@@ -64,16 +156,16 @@ export default function NewBudget() {
                                     <button className="flex flex-col items-center gap-2 rounded-lg border p-3"
                                         key={category.id}
                                         type="button"
-                                        onClick={() =>{ setCategory(category) 
+                                        onClick={() =>{ setSelectedCategory(category) 
                                                         setOpen(false)}}
                                     >
                                     <img
-                                        src={category.icon}
-                                        alt={category.name}
+                                        src={categoryDict[category.id]}
+                                        alt={category.category_name}
                                         className="h-8 w-8"
                                     />
                                     <span className="text-sm">
-                                        {category.name}
+                                        {category.category_name}
                                     </span>
                                     </button>
                                 ))}
@@ -84,17 +176,17 @@ export default function NewBudget() {
                     </Field>
                     <Field>
                         <FieldLabel>Amount</FieldLabel>
-                        <Input id="budget-amount" placeholder="Enter amount" type="number" step="0.01" required/>
+                        <Input onChange = {(e) => setBudgetAmount(e.target.value)} id="budget-amount" placeholder="Enter amount" type="number" step="0.01" required/>
                     </Field>
                     <Field>
                         <FieldLabel>Start Date</FieldLabel> 
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button id="budget-start-date" variant = "outline">
-                                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                                <Button id="budget-start-date" variant = "outline" className="justify-between text-left">
+                                    {date ? format(date, "PPP") : <span >Pick a date</span>}
                                 </Button>
-                            </PopoverTrigger>
-                            <PopoverContent>
+                            </PopoverTrigger >
+                            <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar 
                                     mode="single" 
                                     selected={date} 
@@ -106,12 +198,11 @@ export default function NewBudget() {
                     </Field>
                     <Field>
                         <FieldLabel>Duration</FieldLabel>
-                        <Select defaultValue="1 Month">
+                        <Select value={duration} onValueChange={setDuration}>
                             <SelectTrigger id = "budget-duration" className="w-full">
                                 <SelectValue placeholder = "Select duration" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Custom">Custom</SelectItem>
                                 <SelectItem value="1 Week">1 Week</SelectItem>
                                 <SelectItem value="2 Weeks">2 Weeks</SelectItem>
                                 <SelectItem value="1 Month">1 Month</SelectItem>
@@ -130,7 +221,7 @@ export default function NewBudget() {
                     <Field className="self-start">
                         <div className="flex items-center gap-2">
                             <FieldLabel>Recurrence</FieldLabel>
-                            <Switch id="budget-recurrence" />
+                            <Switch onCheckedChange ={setRecurring} id="budget-recurrence" />
                         </div>
                     </Field>
                 </FieldGroup>
