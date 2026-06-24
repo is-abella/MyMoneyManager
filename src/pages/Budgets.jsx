@@ -3,7 +3,7 @@ import { getSpentForBudget } from "@/components/BudgetCard";
 import BudgetCard from "@/components/BudgetCard";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client"
-import SwipeBudgetCard from "@/components/SwipeBudegtCard";
+import SwipeBudgetCard from "@/components/SwipeBudgetCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,8 +15,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useNavigate } from "react-router-dom";
 
 function Budgets() {
+  const navigate = useNavigate()
   const [budgets, setBudgets] = useState([])
   const [transactions, setTransaction] = useState([])
   const [categories, setCategories] = useState([])
@@ -111,10 +113,15 @@ function Budgets() {
     if (error) {
       console.error(error)
     }
-
     setBudgets(prev => prev.filter(b=> b.id !==deleteId))
     setOpenDeleteDialog(false)
     setDeleteId(null)
+  }
+
+  //edit: go new page. 
+  const handleEditClick = (budget) => {
+    navigate(`/edit-budget/${budget.id}`)
+    console.log(budget.id)
   }
 
 
@@ -124,21 +131,21 @@ function Budgets() {
 
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold mb-4">Budgets</h1>
-        <Button variant="default" size="sm" onClick={() => window.location.href = "/new-budget"}>
+        <Button variant="default" onClick={() => window.location.href = "/new-budget"}>
           New Budget
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
         {sortedBudgets.map((budget) => {
-          const category_name = categories.find(c => c.id === budget.category_id)?.category_name;
+          //const category_id = categories.find(c => c.id === budget.category_id)?.category_id;
           return (
 
             <SwipeBudgetCard key={budget.id}
-              onEdit={()=> console.log("edit", budget.id)} //DO THIS TMR
+              onEdit={()=> handleEditClick(budget)} //DO THIS TMR
               onDelete={()=> handleDeleteClick(budget.id)}
             >
-              <BudgetCard budget={budget} amount_spent={budget.spent} category_name={category_name}/>
+              <BudgetCard budget={budget} amount_spent={budget.spent}/>
             </SwipeBudgetCard>
           );
         })}
@@ -149,9 +156,9 @@ function Budgets() {
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently remove this budget.
               </AlertDialogDescription>
-            </AlertDialogHeader>
+            </AlertDialogHeader> 
 
-            <AlertDialogFooter>
+            <AlertDialogFooter className="flex flex-row justify-center">
               <AlertDialogCancel onClick={() => setDeleteId(null)}>
                 Cancel
               </AlertDialogCancel>

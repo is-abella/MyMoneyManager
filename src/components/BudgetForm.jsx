@@ -38,7 +38,6 @@ import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { categoryDict } from "@/dummydata/data.js"
 import { createClient } from "@/lib/supabase/client"
-import { useNavigate } from "react-router-dom"
 
 function calculateEndDate(startDate, duration) {
   const end = new Date(startDate)
@@ -77,16 +76,21 @@ function calculateEndDate(startDate, duration) {
   return end
 }
 
-export default function NewBudget() {
-    const navigate = useNavigate()
-    const supabase = createClient()
+
+export default function BudgetForm( {
+    initialValues, //budget instance
+    onSubmit, // function to run
+    create // true if create, false if edit
+}) {
+    const [name, setName] = useState(initialValues?.name || "")
     const [categories, setCategories] = useState([])
-    const [date, setDate] = useState(null)
+    const [date, setDate] = useState(initialValues?.start_datetime ? new Date(initialValues.start_datetime) : null)
     const [selectedCategory, setSelectedCategory] = useState(null)
-    const [budgetAmount, setBudgetAmount] = useState(0)
-    const [duration, setDuration] = useState("1 Month")
-    const [isRecurring, setRecurring] = useState(false)
-    const [drawerOpen, setOpen] = useState(false)
+    const [budgetAmount, setBudgetAmount] = useState(initialValues?.amount_cents / 100 || 0)
+    const [duration, setDuration] = useState(initialValues?.duration || "1 Month")
+    const [isRecurring, setRecurring] = useState(initialValues?.is_recurring || false)
+    const [drawerOpen, setOpen]= useState(false)
+    const supabase = createClient()
 
     useEffect(()=> {
         fetchCategories()
@@ -105,21 +109,33 @@ export default function NewBudget() {
         setCategories(data)
     }
 
-    async function handleSubmit(e) {
+    useEffect(() => {
+        if (!initialValues) return
+
+        setName(initialValues.name || "")
+        setDate(initialValues.start_datetime ? new Date(initialValues.start_datetime) : null)
+        setBudgetAmount(initialValues.amount_cents / 100 || 0)
+        setDuration(initialValues.duration || "1 Month")
+        setRecurring(initialValues.is_recurring || false)
+    }, [initialValues])
+
+    useEffect(() => {
+        if (!categories.length || !initialValues) return
+        const cat = categories.find(
+            c => c.id === initialValues.category_id
+        )
+        setSelectedCategory(cat)
+    }, [categories, initialValues])
+
+    const handleSubmit = (e) => {
         e.preventDefault()
         //const formData = new formData(e.target)
         const amount = Math.round(Number(budgetAmount)*100)
         const start_date = date.toISOString()// how to save as timestampz?
         const end_date = calculateEndDate(date, duration).toISOString()
 
-        console.log(amount)
-        console.log(selectedCategory.id)
-        console.log(start_date)
-        console.log(end_date)
-        console.log(isRecurring)
-        console.log(duration)
-
         const payload = {
+            name : name,
             category_id: selectedCategory.id,
             amount_cents: amount,
             start_datetime: start_date,
@@ -127,18 +143,20 @@ export default function NewBudget() {
             duration: duration,
             is_recurring: isRecurring
         }
-
-        const {error} = await supabase.from("budgets").insert([payload])
-        if (error) {
-            console.error(error)
-            return
-        }
-        navigate("/budgets")
+        onSubmit(payload)
     }
     
     return (
-        <div className="w-full max-w-md p-5">
+        <div className="w-full max-w-md p-5 text-base">
             <form onSubmit = {handleSubmit}>
+
+                <FieldGroup className="max-w-sm pb-5">
+                    <Field>
+                        <FieldLabel>Budget Name</FieldLabel>
+                        <Input className = "text-base" value = {name} onChange={(e) => setName(e.target.value)} id="budget-name" placeholder="Meow..." type="text" required/>
+                    </Field>
+                </FieldGroup>
+
                 <FieldGroup className="grid max-w-sm grid-cols-2 pb-5">
                     <Field>
                         <FieldLabel>Category</FieldLabel>
@@ -153,7 +171,7 @@ export default function NewBudget() {
                             <DrawerContent>
                                 <div className="grid grid-cols-4 gap-4 m-5">
                                 {categories.map(category => (
-                                    <button className="flex flex-col items-center gap-2 rounded-lg border p-3"
+                                    <button className="flex flex-col items-center gap-2 border p-3"
                                         key={category.id}
                                         type="button"
                                         onClick={() =>{ setSelectedCategory(category) 
@@ -176,7 +194,7 @@ export default function NewBudget() {
                     </Field>
                     <Field>
                         <FieldLabel>Amount</FieldLabel>
-                        <Input onChange = {(e) => setBudgetAmount(e.target.value)} id="budget-amount" placeholder="Enter amount" type="number" step="0.01" required/>
+                        <Input className = "text-base" value = {budgetAmount} onChange={(e) => setBudgetAmount(e.target.value)} id="budget-amount" placeholder="Enter amount" type="number" inputMode="numeric" step="0.01" required/>
                     </Field>
                     <Field>
                         <FieldLabel>Start Date</FieldLabel> 
@@ -221,7 +239,7 @@ export default function NewBudget() {
                     <Field className="self-start">
                         <div className="flex items-center gap-2">
                             <FieldLabel>Recurrence</FieldLabel>
-                            <Switch onCheckedChange ={setRecurring} id="budget-recurrence" />
+                            <Switch checked = {isRecurring} onCheckedChange ={setRecurring} id="budget-recurrence" />
                         </div>
                     </Field>
                 </FieldGroup>
@@ -232,9 +250,13 @@ export default function NewBudget() {
                     <Button variant="outline" className="mt-4 mr-4" onClick={() => window.location.href = "/budgets"}>
                         Cancel
                     </Button>
+                    { create ? 
                     <Button type="submit" className="mt-4">
                         Create Budget
-                    </Button>
+                    </Button>  :    
+                    <Button type="submit" className="mt-4">
+                        Edit Budget
+                    </Button> }
 
                 </div>
 
