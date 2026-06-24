@@ -1,10 +1,11 @@
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
+import { categoryDict } from "@/dummydata/data";
 
 
 //for each budget, query transactions matching category within timeframe. Add up total. 
-export default function BudgetCard({ budget, amount_spent, category_name}) { 
+export default function BudgetCard({ budget, amount_spent}) { 
     const progress = amount_spent / budget.amount_cents // both in cents
     const start = new Date(budget.start_datetime)
     const end = new Date(budget.end_datetime)
@@ -20,16 +21,15 @@ export default function BudgetCard({ budget, amount_spent, category_name}) {
 
     return (
         <Card className="p-2">
-            <div className="flex justify-between mb-0">
+            <div className="flex justify-between">
                 <div className = "flex items-center gap-2">
-                    <p className="text-sm font-semibold">{category_name}</p>
+                    <img src = {categoryDict[budget.category_id]} />
+                    <p className="text-sm font-semibold">{budget.name}</p>
                     <p className="text-sm text-gray-600 align-right"> ${(budget.amount_cents/100).toFixed(2)}</p>
                     {budget.is_recurring && (
                        <Badge variant="secondary" className="text-xs">Recurring</Badge>
                     )}
-                    {/*How do i make it not show a badge for non-recurring*/}
                 </div>
-                
                 <p className="text-sm text-gray-600 align-right"> {progress.toFixed(2)*100}% </p>
             </div>
  
@@ -69,7 +69,7 @@ export function formatDate(dateString) {
 
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
-    month: "2-digit",
+    month: "short",
     year: "2-digit",
   })
 }

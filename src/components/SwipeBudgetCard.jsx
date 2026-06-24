@@ -1,4 +1,4 @@
-import { motion, useMotionValue } from "framer-motion"
+import { motion, useMotionValue, animate } from "framer-motion"
 import { useState } from "react"
 import { Trash2, Pencil} from 'lucide-react';
 
@@ -15,8 +15,20 @@ export default function SwipeBudgetCard({
 
     if (offsetX < -80) {
       setOpen(true)
+
+      animate(x, -140, {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      })
     } else {
       setOpen(false)
+
+      animate(x, 0, {
+        type: "spring",
+        stiffness: 400,
+        damping: 35,
+      })
     }
   }
 
@@ -46,9 +58,7 @@ export default function SwipeBudgetCard({
         drag="x"
         dragConstraints={{ left: -140, right: 0 }}
         onDragEnd={handleDragEnd}
-        animate={{ x: open ? -140 : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="relative z-10 bg-white w-full"
+        className="relative bg-white w-full"
       >
         {children}
       </motion.div>

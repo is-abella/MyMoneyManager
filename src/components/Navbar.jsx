@@ -10,7 +10,7 @@ function Navbar() {
     }`
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t bg-white flex justify-around py-4 pb-6">
+    <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-md border-t bg-white flex justify-around py-4 pb-6 z-10">
 
       <Link to="/" className={item("/")}>
         <Home size={23} />
