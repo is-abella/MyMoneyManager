@@ -17,7 +17,7 @@ function Navbar() {
         Home
       </Link>
 
-      <Link to="/expenses" className={item("/expenses")}>
+      <Link to="/transactions" className={item("/transactions")}>
         <BanknoteArrowDown size={23} />
         Expenses
       </Link>

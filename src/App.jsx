@@ -2,7 +2,7 @@ import { useState } from 'react'
 import useOnlineStatus from './hooks/useOnlineStatus'
 import {BrowserRouter, Route, Routes, Link} from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
-import Expenses from './pages/Expenses'
+import Transactions from './pages/Transactions'
 import Budgets from './pages/Budgets'
 import NewBudget from './pages/NewBudget'
 import EditBudget from './pages/EditBudget'
@@ -17,7 +17,7 @@ function App() {
       <AppShell>
         <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/transactions" element={<Transactions />} />
             <Route path="/budgets" element={<Budgets />} />
             <Route path="/new-budget" element={<NewBudget />} />
             <Route path="/edit-budget/:budgetID" element={<EditBudget />} />
