@@ -5,12 +5,30 @@ import {
   TableCell,
   TableHead,
   TableHeader,
+  TableFooter,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { categoryDict } from "@/dummydata/data"
 import { MoveUp, MoveDown } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 
 export default function Transactions() {
@@ -19,6 +37,7 @@ export default function Transactions() {
   const [categories, setCategories] = useState([])
   const [sortField, setSortField] = useState("date")
   const [sortAscending, setSortAscending] = useState(false)
+  const [selectedCategories, setSelectedCategories] = useState([])
 
 
   useEffect(() => {
@@ -33,6 +52,7 @@ export default function Transactions() {
       return
     }
     setCategories(data)
+    setSelectedCategories(data.map(c => c.id))
   }
 
   useEffect(()=> {
@@ -49,26 +69,19 @@ export default function Transactions() {
       setTransactionData(data)
   }
 
-  const filteredTransactions = useMemo(() => {
-    if (!transactionData.length) return []
-    const data = [...transactionData]
-    if (sortField == "date") {
-      if (sortAscending) {
-        return data.sort((a, b) => new Date(a.transaction_datetime) - new Date(b.transaction_datetime))
-      } else {
-        return data.sort((a, b) => new Date(b.transaction_datetime) - new Date(a.transaction_datetime))
-      }
-    }
-    if (sortField == "amount") {
-      if (sortAscending) {
-        return data.sort((a, b) => a.amount_cents - b.amount_cents)
-      } else {
-        return data.sort((a, b) => b.amount_cents - a.amount_cents)
-      }
-    }
-  }, [sortField, sortAscending, transactionData])
+  function toggleCategory(id) {
+    setSelectedCategories(prev => 
+      prev.includes(id) ? prev.filter(c => c!==id) : [...prev, id]
+    )
+  }
 
+  function deselectAll() {
+    setSelectedCategories([])
+  }
 
+  function selectAll() {
+    setSelectedCategories(categories.map(c=>c.id))
+  }
 
   function formatDate(isoDate) {
     const date = new Date(isoDate)
@@ -79,7 +92,31 @@ export default function Transactions() {
       })
   }
 
-  
+  const filteredTransactions = useMemo(() => {
+    if (!transactionData.length) return []
+    const data = transactionData.map((t) => {
+      const signedAmount = t.type === "expense" ? -t.amount_cents : t.amount_cents
+      return {
+        ...t,
+        signedAmount}
+      }).filter((t)=> selectedCategories.includes(t.category_id))
+    
+
+    if (sortField == "date") {
+      if (sortAscending) {
+        return data.sort((a, b) => new Date(a.transaction_datetime) - new Date(b.transaction_datetime))
+      } else {
+        return data.sort((a, b) => new Date(b.transaction_datetime) - new Date(a.transaction_datetime))
+      }
+    }
+    if (sortField == "amount") {
+      if (sortAscending) {
+        return data.sort((a, b) => a.signedAmount - b.signedAmount)
+      } else {
+        return data.sort((a, b) => b.signedAmount - a.signedAmount)
+      }
+    }
+  }, [sortField, sortAscending, transactionData, categories, selectedCategories])
 
   
   return (
@@ -102,7 +139,37 @@ export default function Transactions() {
                 </Button> 
               }
             </TableHead>
-            <TableHead>Item</TableHead>
+            <TableHead>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="secondary">
+                    Category & Item
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <Command>
+                    <CommandList>
+                      {categories.map((c) => {
+                        return (
+                        <CommandItem>
+                          <Checkbox onCheckedChange={()=>toggleCategory(c.id)}  checked={selectedCategories.includes(c.id)} /> {/* checked={} and onCheckedChange={}*/}
+                          <img src = {categoryDict[c.id]} /> {c.category_name}
+                        </CommandItem>)
+                        })
+                      } 
+                    </CommandList>
+                    <div className="items-end">
+                      <Button onClick = {deselectAll}>
+                        Deselect All
+                      </Button>
+                      <Button onClick = {selectAll}>
+                        Select All
+                      </Button>
+                    </div>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </TableHead>
             <TableHead className="text-left">
               {(sortField=="amount") ?
 
@@ -142,7 +209,31 @@ export default function Transactions() {
             );
           })}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={3}>Total Expenses</TableCell>
+            <TableCell>
+              <span className="text-[var(--budget-high)]">
+                -${filteredTransactions.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount_cents/100, 0).toFixed(2)}
+              </span>
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell colSpan={3}>Total Income</TableCell>
+            <TableCell>
+              <span className="text-[var(--budget-low)]">
+               +${filteredTransactions.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount_cents/100, 0).toFixed(2)}
+              </span>
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell colSpan={3}>Net</TableCell>
+            <TableCell> 
+            </TableCell>
+          </TableRow>
+        </TableFooter>
       </Table>
+
 
     </div>
 
