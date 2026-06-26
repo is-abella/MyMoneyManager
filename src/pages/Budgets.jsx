@@ -142,7 +142,7 @@ function Budgets() {
           return (
 
             <SwipeBudgetCard key={budget.id}
-              onEdit={()=> handleEditClick(budget)} //DO THIS TMR
+              onEdit={()=> handleEditClick(budget)} 
               onDelete={()=> handleDeleteClick(budget.id)}
             >
               <BudgetCard budget={budget} amount_spent={budget.spent}/>
