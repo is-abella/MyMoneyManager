@@ -8,6 +8,7 @@ import NewBudget from './pages/NewBudget'
 import EditBudget from './pages/EditBudget'
 import Navbar from './components/Navbar'
 import AppShell from './components/layout/AppShell'
+import NewTransaction from './pages/NewTransaction'
 
 function App() {
   const isOnline = useOnlineStatus()
@@ -18,6 +19,7 @@ function App() {
         <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/transactions" element={<Transactions />} />
+            <Route path="/new-transaction" element={<NewTransaction />} />
             <Route path="/budgets" element={<Budgets />} />
             <Route path="/new-budget" element={<NewBudget />} />
             <Route path="/edit-budget/:budgetID" element={<EditBudget />} />
