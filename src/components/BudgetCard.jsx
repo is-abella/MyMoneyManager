@@ -30,7 +30,7 @@ export default function BudgetCard({ budget, amount_spent}) {
                        <Badge variant="secondary" className="text-xs">Recurring</Badge>
                     )}
                 </div>
-                <p className="text-sm text-gray-600 align-right"> {progress.toFixed(2)*100}% </p>
+                <p className="text-sm text-gray-600 align-right"> {Math.round(progress * 100)}% </p>
             </div>
  
             <Progress

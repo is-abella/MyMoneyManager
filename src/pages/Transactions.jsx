@@ -18,12 +18,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
+import {Badge} from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { categoryDict } from "@/dummydata/data"
 import { MoveUp, MoveDown } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { motion, useMotionValue, animate } from "framer-motion"
 
 
 export default function Transactions() {
@@ -37,10 +39,11 @@ export default function Transactions() {
   const [sortField, setSortField] = useState("date")
   const [sortAscending, setSortAscending] = useState(false)
   const [selectedCategories, setSelectedCategories] = useState([])
-  const [monthSelected, setMonthSelected] = useState(monthNames[new Date().getMonth()])
-  const [yearSelected, setYearSelected] = useState(new Date().getFullYear())
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [months, setMonths] = useState([])
   const [years, setYears] = useState([])
+  const x = useMotionValue(0)
+  const SWIPE_THRESHOLD = 10
 
 
 
@@ -119,8 +122,8 @@ export default function Transactions() {
     }).filter((t)=> {
       return (
         selectedCategories.includes(t.category_id) &&
-        monthNames[t.month] === monthSelected &&
-        t.year === yearSelected
+        t.month === currentDate.getMonth() &&
+        t.year === currentDate.getFullYear()
       )
     })
     
@@ -136,7 +139,7 @@ export default function Transactions() {
         : b.signedAmount - a.signedAmount
       )
     }
-  }, [sortField, sortAscending, transactionData, categories, selectedCategories, monthSelected, yearSelected])
+  }, [sortField, sortAscending, transactionData, categories, selectedCategories, currentDate])
 
   const summary = useMemo(() => {
   let income = 0
@@ -151,19 +154,26 @@ export default function Transactions() {
 
     net += t.signedAmount / 100
   }
-
   return { income, expense, net }
-}, [filteredTransactions])
+  }, [filteredTransactions])
+
+  function goPrevMonth() {
+    setCurrentDate(prev => {return new Date(prev.getFullYear(), prev.getMonth()-1, 1)})
+  }
+  function goNextMonth() {
+    setCurrentDate(prev => {return new Date(prev.getFullYear(), prev.getMonth()+1, 1)})
+  }
+
 
   
   return (
     <div className="p-4 pb-24 overflow-y-auto">
       <div className="flex">
         <h1 className="text-2xl font-bold mb-4 mr-4">Transactions</h1>
-          <Popover>
+          <Popover >
             <PopoverTrigger asChild>
-              <Button variant="secondary">
-                {monthSelected} {yearSelected}
+              <Button variant="secondary" className="mr-4">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </Button>
             </PopoverTrigger >
             <PopoverContent>
@@ -172,10 +182,10 @@ export default function Transactions() {
                 <div className="p-4">
                   <h4 className="mb-4 text-sm leading-none font-medium">Month</h4>
                   {months.map((month) => (
-                    <div>
-                      <Button variant="secondary" onClick={()=>setMonthSelected(monthNames[month])}
+                    <div key={month}>
+                      <Button variant="secondary" onClick={()=>setCurrentDate(prev => {return new Date(prev.getFullYear(), month, 1)})}
                         className={`w-full px-3 py-2 text-left
-                        ${monthSelected === monthNames[month]
+                        ${currentDate.getMonth() === month
                           ? "bg-gray-400 text-primary-foreground"
                           : "hover:bg-muted"}`}>
                         {monthNames[month]}
@@ -189,10 +199,10 @@ export default function Transactions() {
                 <div className="p-4">
                   <h4 className="mb-4 text-sm leading-none font-medium">Year</h4>
                   {years.map((year) => (
-                    <div>
-                      <Button variant="secondary" onClick={()=>setYearSelected(year)}
+                    <div key={year}>
+                      <Button variant="secondary" onClick={()=>setCurrentDate(prev => {return new Date(year, prev.getMonth(), 1)})}
                         className={`w-full px-3 py-2 text-left
-                        ${yearSelected === year
+                        ${currentDate.getFullYear() === year
                           ? "bg-gray-400 text-primary-foreground"
                           : "hover:bg-muted"}`}>
                         {year}
@@ -204,127 +214,177 @@ export default function Transactions() {
             </div>
             </PopoverContent>
           </Popover>
+          <Button variant="default" onClick={() => window.location.href = "/new-transaction"}>
+            New Transaction
+          </Button>
       </div>
       
-      <div className="w-full">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[120px]">
-                {(sortField=="date") ?
+      <div className="overflow-hidden">
+      <motion.div
+        className="touch-pan-y select-none"
+        style={{ x }}
+        drag="x"
+        dragElastic={0.15}
+        dragMomentum={false}
+        onDragEnd={(e, info) => {
+          console.log("INFO:", info)
+          console.log("OFFSET:", info.offset)
+          console.log("VELOCITY:", info.velocity)
+          if (info.offset.x > SWIPE_THRESHOLD) {
+            animate(x, window.innerWidth, {
+              duration: 0.18,
+              onComplete: () => {
+                goPrevMonth()
+                x.set(-window.innerWidth)
+                animate(x, 0, {
+                  duration: 0.18
+                })
+              }
+            })
 
-                  <Button variant = "secondary" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
-                  { sortAscending ? (
-                    <div className="flex"><MoveUp/>Date</div>
-                  ) : <div className="flex"><MoveDown/>Date</div> } 
-                  </Button> :
-                  
-                  <Button variant = "ghost" className="flex" onClick={()=> setSortField("date")}>
-                    Date
-                  </Button> 
-                }
-              </TableHead>
-              <TableHead className="w-[180px]">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="secondary">
-                      Category & Item
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <Command>
-                      <CommandList>
-                        {categories.map((c) => {
-                          return (
-                          <CommandItem>
-                            <Checkbox onCheckedChange={()=>toggleCategory(c.id)}  checked={selectedCategories.includes(c.id)} /> {/* checked={} and onCheckedChange={}*/}
-                            <img src = {categoryDict[c.id]} /> {c.category_name}
-                          </CommandItem>)
-                          })
-                        } 
-                      </CommandList>
-                      <div className="items-end">
-                        <Button onClick = {deselectAll}>
-                          Deselect All
-                        </Button>
-                        <Button onClick = {selectAll}>
-                          Select All
-                        </Button>
-                      </div>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </TableHead>
-              <TableHead className="text-left">
-                {(sortField=="amount") ?
+          } else if (info.offset.x < -SWIPE_THRESHOLD) {
+            animate(x, -window.innerWidth, {
+              duration: 0.18,
+              onComplete: () => {
+                goNextMonth()
+                x.set(window.innerWidth)
+                animate(x, 0, {
+                  duration: 0.18
+                })
+              }
+            })
+          } else {
+            animate(x, 0, {
+              duration: 0.2
+            })
+          }
+        }}
+      >
+        <div className="w-full">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[90px]">
+                  {(sortField=="date") ?
 
-                  <Button variant = "secondary" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
-                  { sortAscending ? (
-                    <div className="flex"><MoveUp/>Amount</div>
-                  ) : <div className="flex"><MoveDown/>Amount</div> } 
-                  </Button> :
-                  
-                  <Button variant = "ghost" className="flex" onClick={()=> setSortField("amount")}>
-                    Amount
-                  </Button> 
-                }
+                    <Button variant = "secondary" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
+                    { sortAscending ? (
+                      <div className="flex"><MoveUp/>Date</div>
+                    ) : <div className="flex"><MoveDown/>Date</div> } 
+                    </Button> :
+                    
+                    <Button variant = "ghost" className="flex" onClick={()=> setSortField("date")}>
+                      Date
+                    </Button> 
+                  }
+                </TableHead>
+                <TableHead className="w-[180px]">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary">
+                        Category & Item
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <Command>
+                        <CommandList>
+                          {categories.map((c) => {
+                            return (
+                            <CommandItem key={c.id}>
+                              <Checkbox onCheckedChange={()=>toggleCategory(c.id)}  checked={selectedCategories.includes(c.id)} /> {/* checked={} and onCheckedChange={}*/}
+                              <img src = {categoryDict[c.id]} /> {c.category_name}
+                            </CommandItem>)
+                            })
+                          } 
+                        </CommandList>
+                        <div className="items-end">
+                          <Button onClick = {deselectAll}>
+                            Deselect All
+                          </Button>
+                          <Button onClick = {selectAll}>
+                            Select All
+                          </Button>
+                        </div>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </TableHead>
+                <TableHead className="text-left">
+                  {(sortField=="amount") ?
 
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredTransactions.map((transaction) => {
-              return (
-    
-                <TableRow key={transaction.id}>
-                  <TableCell className="font-medium">{formatDate(transaction.transaction_datetime)}</TableCell>
-                  <TableCell className = "flex items-center gap-1.5"><img className="w-4.5" src = {categoryDict[transaction.category_id]}/> {transaction.notes}</TableCell>
-                  <TableCell className="font-right">
-                    {transaction.type === "expense" ? (
-                      <span className="text-[var(--budget-high)]">
-                        -${(transaction.amount_cents / 100).toFixed(2)}
-                      </span>
-                    ) : (
-                      <span className="text-[var(--budget-low)]">
-                        +${(transaction.amount_cents / 100).toFixed(2)}
-                      </span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-          <TableFooter className="w-full">
-            <TableRow>
-              <TableCell colSpan={2}>Total Expenses</TableCell>
-              <TableCell>
-                <span className="text-[var(--budget-high)]">
-                  -${summary.expense.toFixed(2)}
-                </span>
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}>Total Income</TableCell>
-              <TableCell>
-                <span className="text-[var(--budget-low)]">
-                +${summary.income.toFixed(2)}
-                </span>
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell colSpan={2}>Net</TableCell>
-              <TableCell>
-                {summary.net > 0 ? 
-                  <span className="text-[var(--budget-low)]">
-                    +${summary.net.toFixed(2)}
-                  </span> :
+                    <Button variant = "secondary" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
+                    { sortAscending ? (
+                      <div className="flex"><MoveUp/>Amount</div>
+                    ) : <div className="flex"><MoveDown/>Amount</div> } 
+                    </Button> :
+                    
+                    <Button variant = "ghost" className="flex" onClick={()=> setSortField("amount")}>
+                      Amount
+                    </Button> 
+                  }
+
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTransactions.map((transaction) => {
+                return (
+      
+                  <TableRow key={transaction.id}>
+                    <TableCell className="font-medium">{formatDate(transaction.transaction_datetime)}</TableCell>
+                    <TableCell className = "flex items-center gap-1.5"><img className="w-4.5" src = {categoryDict[transaction.category_id]}/> {transaction.notes}
+                      {transaction.is_recurring && (
+                        <Badge variant="secondary" className="text-xs">Recurring</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-right">
+                      {transaction.type === "expense" ? (
+                        <span className="text-[var(--budget-high)]">
+                          -${(transaction.amount_cents / 100).toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--budget-low)]">
+                          +${(transaction.amount_cents / 100).toFixed(2)}
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+            <TableFooter className="w-full">
+              <TableRow>
+                <TableCell colSpan={2}>Total Expenses</TableCell>
+                <TableCell>
                   <span className="text-[var(--budget-high)]">
-                    -${summary.net.toFixed(2)}
-                  </span>}
-              </TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+                    -${summary.expense.toFixed(2)}
+                  </span>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell colSpan={2}>Total Income</TableCell>
+                <TableCell>
+                  <span className="text-[var(--budget-low)]">
+                  +${summary.income.toFixed(2)}
+                  </span>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell colSpan={2}>Net</TableCell>
+                <TableCell>
+                  {summary.net > 0 ? 
+                    <span className="text-[var(--budget-low)]">
+                      +${summary.net.toFixed(2)}
+                    </span> :
+                    <span className="text-[var(--budget-high)]">
+                      -${summary.net.toFixed(2)/-1}
+                    </span>}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </div>
+      </motion.div>
       </div>
     </div>
   )
