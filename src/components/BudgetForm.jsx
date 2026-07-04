@@ -1,17 +1,13 @@
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
   FieldSeparator,
-  FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -23,12 +19,7 @@ import {
 } from "@/components/ui/popover"
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Calendar } from "@/components/ui/calendar"
@@ -224,8 +215,6 @@ export default function BudgetForm( {
                                 <SelectItem value="1 Week">1 Week</SelectItem>
                                 <SelectItem value="2 Weeks">2 Weeks</SelectItem>
                                 <SelectItem value="1 Month">1 Month</SelectItem>
-                                <SelectItem value="2 Months">2 Months</SelectItem>
-                                <SelectItem value="3 Months">3 Months</SelectItem>
                                 <SelectItem value="6 Months">6 Months</SelectItem>
                                 <SelectItem value="1 Year">1 Year</SelectItem>
                             </SelectContent>
