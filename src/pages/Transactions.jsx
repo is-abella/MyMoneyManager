@@ -26,6 +26,7 @@ import { categoryDict } from "@/dummydata/data"
 import { MoveUp, MoveDown } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { motion, useMotionValue, animate } from "framer-motion"
+import { useNavigate } from "react-router-dom"
 
 
 export default function Transactions() {
@@ -34,6 +35,7 @@ export default function Transactions() {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ]
   const supabase = createClient()
+  const navigate = useNavigate()
   const [transactionData, setTransactionData] = useState([])
   const [categories, setCategories] = useState([])
   const [sortField, setSortField] = useState("date")
@@ -43,7 +45,7 @@ export default function Transactions() {
   const [months, setMonths] = useState([])
   const [years, setYears] = useState([])
   const x = useMotionValue(0)
-  const SWIPE_THRESHOLD = 10
+  const SWIPE_THRESHOLD = 15
 
 
 
@@ -164,8 +166,6 @@ export default function Transactions() {
     setCurrentDate(prev => {return new Date(prev.getFullYear(), prev.getMonth()+1, 1)})
   }
 
-
-  
   return (
     <div className="p-4 pb-24 overflow-y-auto">
       <div className="flex">
@@ -242,7 +242,7 @@ export default function Transactions() {
               }
             })
 
-          } else if (info.offset.x < -SWIPE_THRESHOLD) {
+          } else if (info.offset.x < -SWIPE_THRESHOLD && currentDate.getMonth() < new Date().getMonth()) {
             animate(x, -window.innerWidth, {
               duration: 0.18,
               onComplete: () => {
@@ -329,8 +329,8 @@ export default function Transactions() {
             <TableBody>
               {filteredTransactions.map((transaction) => {
                 return (
-      
-                  <TableRow key={transaction.id}>
+                  <TableRow key={transaction.id}
+                  onClick = {() => navigate(`/edit-transaction/${transaction.id}`)}>
                     <TableCell className="font-medium">{formatDate(transaction.transaction_datetime)}</TableCell>
                     <TableCell className = "flex items-center gap-1.5"><img className="w-4.5" src = {categoryDict[transaction.category_id]}/> {transaction.notes}
                       {transaction.is_recurring && (

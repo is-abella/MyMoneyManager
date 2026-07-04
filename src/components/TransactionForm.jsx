@@ -3,6 +3,7 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSeparator,
+  FieldDescription
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -26,7 +27,7 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { format } from "date-fns"
 import { categoryDict } from "@/dummydata/data.js"
 import { createClient } from "@/lib/supabase/client"
@@ -35,7 +36,7 @@ import { createClient } from "@/lib/supabase/client"
 export default function TransactionForm( {
     initialValues, //budget instance
     onSubmit, // function to run
-    create // true if create, false if edit
+    create, // true if create, false if edit
 }) {
     const [notes, setNotes] = useState(initialValues?.notes || "")
     const [categories, setCategories] = useState([])
@@ -46,6 +47,7 @@ export default function TransactionForm( {
     const [isRecurring, setRecurring] = useState(initialValues?.is_recurring || false)
     const [type, setType] = useState(initialValues?.type || "")
     const [drawerOpen, setOpen]= useState(false)
+    //const [editScope, setEditScope] = useState("individual") // "individual" or "all"
 
     const supabase = createClient()
 
@@ -87,6 +89,22 @@ export default function TransactionForm( {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+        if (!selectedCategory) {
+            alert("Please select a category")
+            return
+        }
+        if (!transactionAmount || Number(transactionAmount) <= 0) {
+            alert("Please enter a valid amount")
+            return
+        }
+        if (!date) {
+            alert("Please pick a date")
+            return
+        }
+        if (isRecurring && !duration) {
+            alert("Please select a recurrence duration")
+            return
+        }
         //const formData = new formData(e.target)
         const amount = Math.round(Number(transactionAmount)*100)
         const transaction_datetime = date.toISOString()// how to save as timestampz?
@@ -100,8 +118,28 @@ export default function TransactionForm( {
             is_recurring: isRecurring,
             type: type
         }
-        onSubmit(payload)
+
+        onSubmit(payload) //editScope
     }
+    const hasCoreChanges = useMemo(() => {
+        if (!initialValues) return true // creating new, always "changed"
+        return (
+            notes !== (initialValues.notes || "") ||
+            selectedCategory?.id !== initialValues.category_id ||
+            Number(transactionAmount) !== (initialValues.amount_cents / 100) ||
+            date?.toISOString() !== new Date(initialValues.transaction_datetime).toISOString()
+        )
+    }, [notes, selectedCategory, transactionAmount, date, initialValues])
+
+    const hasRecurrenceChanges = useMemo(() => {
+        if (!initialValues) return false
+        return (
+            isRecurring !== !!initialValues.recurring_id ||
+            duration !== (initialValues.recurring_duration || "")
+        )
+    }, [isRecurring, duration, initialValues])
+
+    const hasAnyChanges = hasCoreChanges || hasRecurrenceChanges
     
     return (
         <div className="w-full max-w-md p-5 text-base">
@@ -173,7 +211,7 @@ export default function TransactionForm( {
                                   
                     <Field>
                         <FieldLabel>Notes</FieldLabel>
-                        <Input className = "text-base" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text" required/>
+                        <Input className = "text-base" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
                     </Field>
                 </FieldGroup>
                 
@@ -185,22 +223,22 @@ export default function TransactionForm( {
                             <FieldLabel>Recurrence</FieldLabel>
                             <Switch checked = {isRecurring} onCheckedChange ={(checked) => {setRecurring(checked)
                              !checked ? setDuration("") : {}
-                            }} />
+                            }} /> 
                         </div>
+                        {!create && initialValues?.is_recurring && <FieldDescription>Disabling this deactivates the series</FieldDescription> }
                     </Field>
-                                    
+       
                     <Field>
                         <FieldLabel>Duration</FieldLabel>
-                        <Select value={duration} onValueChange={setDuration}>
+                        <Select value={duration} onValueChange={setDuration} disabled={!isRecurring}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder = "Select duration" />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="1 Day">1 Day</SelectItem>
                                 <SelectItem value="1 Week">1 Week</SelectItem>
                                 <SelectItem value="2 Weeks">2 Weeks</SelectItem>
                                 <SelectItem value="1 Month">1 Month</SelectItem>
-                                <SelectItem value="2 Months">2 Months</SelectItem>
-                                <SelectItem value="3 Months">3 Months</SelectItem>
                                 <SelectItem value="6 Months">6 Months</SelectItem>
                                 <SelectItem value="1 Year">1 Year</SelectItem>
                             </SelectContent>
@@ -214,16 +252,27 @@ export default function TransactionForm( {
                     <Button variant="outline" className="mt-4 mr-4" onClick={() => window.location.href = "/transactions"}>
                         Cancel
                     </Button>
-                    { create ? 
-                    <Button type="submit" className="mt-4">
-                        Create Transaction
-                    </Button>  :    
-                    <Button type="submit" className="mt-4">
-                        Edit Transaction
-                    </Button> }
+                { create &&
+                <Button type="submit" className="mt-4">
+                    Create Transaction
+                </Button>
+                }
+                    
+                {!create && initialValues?.recurring_id &&
+                    /*<Button type="submit" className="mt-4" disabled={!hasAnyChanges || hasRecurrenceChanges} onClick={() => setEditScope("individual")}>
+                        Edit This Only
+                    </Button>*/
+                    <Button type="submit" className="mt-4" disabled={!hasAnyChanges}> {/*no editScope for now */}
+                        Edit This & Future
+                    </Button>
+                }
 
+                {!create && !initialValues?.recurring_id &&
+                <Button type="submit" className="mt-4" disabled={!hasAnyChanges}>
+                    Edit Transaction
+                </Button>
+                }
                 </div>
-
             </form>
         </div> 
     )
