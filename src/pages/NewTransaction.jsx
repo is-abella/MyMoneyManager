@@ -36,6 +36,12 @@ export default function NewTransaction() {
             ...transactionPayload,
             recurring_id: recurringId
         })
+
+        if (recurringId) {
+            const { error: genError } = await supabase.rpc("generate_recurring_transactions")
+            if (genError) console.log(genError)
+        }
+    
         if (!error) {
             navigate("/transactions")
         } else {
@@ -49,6 +55,4 @@ export default function NewTransaction() {
             <TransactionForm onSubmit={handleCreate} create={true}/>
         </div>
     )
-
-
 }

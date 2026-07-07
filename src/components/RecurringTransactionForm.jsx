@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/drawer"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
-import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useMemo } from "react"
 import { format } from "date-fns"
@@ -33,19 +32,18 @@ import { categoryDict } from "@/dummydata/data.js"
 import { createClient } from "@/lib/supabase/client"
 
 
-export default function TransactionForm( {
-    initialValues, //budget instance
+export default function RecurringTransactionForm( {
+    initialValues, //takes in recurring_transaction instance
     onSubmit, // function to run
-    create, // true if create, false if edit
-    onDelete
+    onDeleteFuture,
+    onDeleteAll,
 }) {
     const [notes, setNotes] = useState(initialValues?.notes || "")
     const [categories, setCategories] = useState([])
-    const [date, setDate] = useState(initialValues?.transaction_datetime ? new Date(initialValues.transaction_datetime) : new Date())
+    const [startDate, setStartDate] = useState(initialValues?.start_date ? new Date(initialValues.start_date) : new Date())
     const [selectedCategory, setSelectedCategory] = useState(null)
     const [transactionAmount, setTransactionAmount] = useState(initialValues?.amount_cents / 100 || 0)
     const [duration, setDuration] = useState(initialValues?.recurring_duration || "")
-    const [isRecurring, setRecurring] = useState(initialValues?.is_recurring || false)
     const [type, setType] = useState(initialValues?.type || "")
     const [drawerOpen, setOpen]= useState(false)
     //const [editScope, setEditScope] = useState("individual") // "individual" or "all"
@@ -73,10 +71,9 @@ export default function TransactionForm( {
         if (!initialValues) return
 
         setNotes(initialValues.notes || "")
-        setDate(initialValues.transaction_datetime ? new Date(initialValues.transaction_datetime) : null)
+        setStartDate(initialValues.start_date ? new Date(initialValues.start_date) : null)
         setTransactionAmount(initialValues.amount_cents / 100 || 0)
         setDuration(initialValues.recurring_duration || "")
-        setRecurring(initialValues.is_recurring || false)
         setType(initialValues.type || "")
     }, [initialValues])
 
@@ -98,35 +95,38 @@ export default function TransactionForm( {
             alert("Please enter a valid amount")
             return
         }
-        if (!date) {
+        if (!startDate) {
             alert("Please pick a date")
-            return
-        }
-        if (create && isRecurring && !duration) {
-            alert("Please select a recurrence duration")
             return
         }
         //const formData = new formData(e.target)
         const amount = Math.round(Number(transactionAmount)*100)
-        const transaction_datetime = date.toISOString()// how to save as timestampz?
+        const transaction_startdate = startDate.toISOString()// how to save as timestampz?
 
         const payload = {
             notes : notes,
             category_id: selectedCategory.id,
             amount_cents: amount,
-            transaction_datetime: transaction_datetime,
+            transaction_datetime: transaction_startdate,
             recurring_duration: duration,
-            is_recurring: isRecurring,
+            last_generated_date: transaction_startdate,
+            is_active: true,
             type: type
         }
 
         onSubmit(payload) //editScope
     }
 
-    const handleDelete = () => {
-        const confirmed = window.confirm("Delete this transaction?")
+    const handleDeleteFuture = () => {
+        const confirmed = window.confirm("Disable this recurring transaction?")
         if (!confirmed) return
-        onDelete()
+        onDeleteFuture()
+    }
+
+    const handleDeleteAll = () => {
+        const confirmed = window.confirm("Delete all occurrences related to this recurring transaction?")
+        if (!confirmed) return
+        onDeleteAll()
     }
 
     const hasAnyChanges = useMemo(() => {
@@ -135,17 +135,11 @@ export default function TransactionForm( {
             notes !== (initialValues.notes || "") ||
             selectedCategory?.id !== initialValues.category_id ||
             Number(transactionAmount) !== (initialValues.amount_cents / 100) ||
-            date?.toISOString() !== new Date(initialValues.transaction_datetime).toISOString()
-        )
-    }, [notes, selectedCategory, transactionAmount, date, initialValues])
-
-    /* const hasRecurrenceChanges = useMemo(() => {
-        if (!initialValues) return false
-        return (
-            isRecurring !== !!initialValues.recurring_id ||
+            startDate?.toISOString() !== new Date(initialValues.start_date).toISOString() ||
             duration !== (initialValues.recurring_duration || "")
         )
-    }, [isRecurring, duration, initialValues])*/
+    }, [notes, duration, selectedCategory, transactionAmount, startDate, initialValues])
+
     
     return (
         <div className="w-full max-w-md p-5 text-base">
@@ -201,15 +195,15 @@ export default function TransactionForm( {
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button variant = "outline" className="justify-between text-left">
-                                    {date ? format(date, "PPP") : <span >Pick a date</span>}
+                                    {startDate ? format(startDate, "PPP") : <span >Pick a date</span>}
                                 </Button>
                             </PopoverTrigger >
                             <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar 
                                     mode="single" 
-                                    selected={date} 
-                                    onSelect={setDate}
-                                    defaultMonth={date}>
+                                    selected={startDate} 
+                                    onSelect={setStartDate}
+                                    defaultMonth={startDate}>
                                 </Calendar>
                             </PopoverContent>
                         </Popover>
@@ -220,23 +214,11 @@ export default function TransactionForm( {
                         <Input className = "text-base" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
                     </Field>
                 </FieldGroup>
-                <FieldSeparator />
-
-                { create &&
-                <div>
-                <FieldGroup className = "grid max-w-sm grid-cols-2 pt-5 pb-5">
-                    <Field className="self-start">
-                        <div className="flex items-center gap-2">
-                            <FieldLabel>Recurrence</FieldLabel>
-                            <Switch checked = {isRecurring} onCheckedChange ={(checked) => {setRecurring(checked)
-                             !checked ? setDuration("") : {}
-                            }} /> 
-                        </div>
-                    </Field>
-       
+                
+                <FieldGroup className = "grid max-w-sm grid-cols-2 pb-5">
                     <Field>
                         <FieldLabel>Duration</FieldLabel>
-                        <Select value={duration} onValueChange={setDuration} disabled={!isRecurring}>
+                        <Select value={duration} onValueChange={setDuration}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder = "Select duration" />
                             </SelectTrigger>
@@ -251,30 +233,34 @@ export default function TransactionForm( {
                         </Select>
                     </Field>
                 </FieldGroup>
-                <FieldSeparator />
-                </div>}
+
+                <FieldSeparator className="pb-5"/>
 
                 <div className="mt-4 float-right">
-                    <Button type= "button" variant="outline" className="mt-4 mr-4" onClick={() => window.location.href = "/transactions"}>
+                    <Button  type="button" variant="outline" className="mt-4 mr-4" onClick={() => window.location.href = "/recurring-transactions"}>
                         Cancel
                     </Button>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button type="button" className="mt-4" variant="destructive">
+                                Delete
+                            </Button>
+                        </PopoverTrigger >
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Button type="button" className="mt-4" variant="destructive" onClick={handleDeleteFuture}>
+                                Disable Series from Now
+                            </Button>
+                            <Button type="button" className="mt-4" variant="destructive" onClick={handleDeleteAll}>
+                                Delete All Related Transactions
+                            </Button>
+                        </PopoverContent>
+                    </Popover>
 
-                { create &&
-                <Button type="submit" className="mt-4">
-                    Create Transaction
-                </Button>
-                }
                     
-                {!create  &&
-                  <div>
-                    <Button type="button" variant="destructive" className="mt-4" onClick = {handleDelete}> 
-                        Delete 
+                    <Button type="submit" className="mt-4" disabled={!hasAnyChanges}>
+                        Edit This Series
                     </Button>
-                    <Button type="submit" className="mt-4" disabled={!hasAnyChanges}> 
-                        Edit 
-                    </Button>
-                  </div>
-                }
+                
                 </div>
             </form>
         </div> 

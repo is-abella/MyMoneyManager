@@ -47,7 +47,7 @@ export default function Transactions() {
   const x = useMotionValue(0)
   const SWIPE_THRESHOLD = 15
 
-
+  //if is_recurring==false and recurring_id==true, means used to be recurring, now deactivated
 
   useEffect(() => {
     fetchCategories()
@@ -327,15 +327,25 @@ export default function Transactions() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              <TableRow>
+                <TableCell colSpan={3} className="text-center">
+                  <Button onClick={() => navigate("/recurring-transactions")}>
+                    Recurring Transactions
+                  </Button>
+                </TableCell>
+              </TableRow>
               {filteredTransactions.map((transaction) => {
                 return (
                   <TableRow key={transaction.id}
                   onClick = {() => navigate(`/edit-transaction/${transaction.id}`)}>
                     <TableCell className="font-medium">{formatDate(transaction.transaction_datetime)}</TableCell>
                     <TableCell className = "flex items-center gap-1.5"><img className="w-4.5" src = {categoryDict[transaction.category_id]}/> {transaction.notes}
-                      {transaction.is_recurring && (
+                      {transaction.is_recurring && transaction.recurring_id && (
                         <Badge variant="secondary" className="text-xs">Recurring</Badge>
                       )}
+                      {/*!transaction.is_recurring && transaction.recurring_id && (
+                        <Badge variant="destructive" className="text-xs">Recurred</Badge>
+                      )*/}
                     </TableCell>
                     <TableCell className="font-right">
                       {transaction.type === "expense" ? (
