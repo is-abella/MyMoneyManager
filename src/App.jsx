@@ -12,6 +12,7 @@ import NewTransaction from './pages/NewTransaction'
 import RecurringTransactions from './pages/RecurringTransactions'
 import EditTransaction from './pages/EditTransaction'
 import EditRecurringTransaction from './pages/EditRecurringTransaction'
+import BudgetDetails from './pages/BudgetDetails'
 
 function App() {
   const isOnline = useOnlineStatus()
@@ -29,6 +30,7 @@ function App() {
             <Route path="/budgets" element={<Budgets />} />
             <Route path="/new-budget" element={<NewBudget />} />
             <Route path="/edit-budget/:budgetID" element={<EditBudget />} />
+            <Route path="/budget-details/:budgetID" element={<BudgetDetails />} />
         </Routes>
 
         <Navbar />
