@@ -30,43 +30,6 @@ import { format } from "date-fns"
 import { categoryDict } from "@/dummydata/data.js"
 import { createClient } from "@/lib/supabase/client"
 
-function calculateEndDate(startDate, duration) {
-  const end = new Date(startDate)
-  switch (duration) {
-    case "1 Week":
-      end.setDate(end.getDate() + 7)
-      break
-
-    case "2 Weeks":
-      end.setDate(end.getDate() + 14)
-      break
-
-    case "1 Month":
-      end.setMonth(end.getMonth() + 1)
-      break
-
-    case "2 Months":
-      end.setMonth(end.getMonth() + 2)
-      break
-
-    case "3 Months":
-      end.setMonth(end.getMonth() + 3)
-      break
-
-    case "6 Months":
-      end.setMonth(end.getMonth() + 6)
-      break
-
-    case "1 Year":
-      end.setFullYear(end.getFullYear() + 1)
-      break
-
-    default:
-      return null
-  }
-  return end
-}
-
 
 export default function BudgetForm( {
     initialValues, //budget instance
@@ -123,14 +86,14 @@ export default function BudgetForm( {
         //const formData = new formData(e.target)
         const amount = Math.round(Number(budgetAmount)*100)
         const start_date = date.toISOString()// how to save as timestampz?
-        const end_date = calculateEndDate(date, duration).toISOString()
+        //const end_date = calculateEndDate(date, duration).toISOString()
 
         const payload = {
             name : name,
             category_id: selectedCategory.id,
             amount_cents: amount,
             start_datetime: start_date,
-            end_datetime: end_date,
+            //end_datetime: end_date,
             duration: duration,
             is_recurring: isRecurring
         }

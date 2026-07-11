@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react"
-import { getSpentForBudget } from "@/components/BudgetCard"; 
 import BudgetCard from "@/components/BudgetCard";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client"
+import { DURATION_CONFIG, addDuration, periodsElapsed, getCurrentPeriod, getSpentForBudget} from "@/lib/helperFunctions";
 import SwipeBudgetCard from "@/components/SwipeBudgetCard";
 import {
   AlertDialog,
@@ -24,9 +24,7 @@ function Budgets() {
   const [categories, setCategories] = useState([])
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
-
   const supabase = createClient()
-
 
   useEffect(() => { // useEffect lets u run code after rendering to avoid infinite running. [] is dependency array, means run exactly once when component first mounts.
     fetchBudgets()
@@ -44,7 +42,6 @@ function Budgets() {
     const { data, error } = await supabase
       .from("budgets")
       .select("*")
-      console.log(data)
 
     if (error) {
       console.error(error)
@@ -58,43 +55,43 @@ function Budgets() {
   const { data, error } = await supabase
       .from("transactions")
       .select("*")
-      console.log(data)
 
     if (error) {
       console.error(error)
       return
     }
-      setTransaction(data)
+    setTransaction(data)
   }
 
   async function fetchCategories() {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
-      console.log(data)
 
     if (error) {
       console.error(error)
       return
     }
-      setCategories(data)
+    setCategories(data)
   }
 
   const sortedBudgets = useMemo(() => {
     if (!budgets.length || !transactions.length) return []
 
     return budgets
-      .map((budget) => {
-        const spent = getSpentForBudget(budget, transactions) //in cents
+      .map((budget) => ({budget, period: getCurrentPeriod(budget)}))
+      .filter(({period}) => period !== null)
+      .map(({budget, period}) => {
+        const spent = getSpentForBudget(budget, period, transactions) //in cents
         const total = budget.amount_cents || 1
-
         return {
           ...budget,
+          period,
           spent,
           progress: spent / total,
         }
-      })
-      .sort((a, b) => b.progress - a.progress)
+      })    
+     .sort((a, b) => b.progress - a.progress)
   }, [budgets, transactions])
 
   const handleDeleteClick = (id) => {
@@ -107,7 +104,6 @@ function Budgets() {
       .from("budgets")
       .delete()
       .eq("id", deleteId)
-    console.log("Supabase query:", query)
 
     const {error} = await query
     if (error) {
@@ -121,7 +117,6 @@ function Budgets() {
   //edit: go new page. 
   const handleEditClick = (budget) => {
     navigate(`/edit-budget/${budget.id}`)
-    console.log(budget.id)
   }
 
 
@@ -145,7 +140,7 @@ function Budgets() {
               onEdit={()=> handleEditClick(budget)} 
               onDelete={()=> handleDeleteClick(budget.id)}
             >
-              <BudgetCard budget={budget} amount_spent={budget.spent}/>
+              <BudgetCard budget={budget} period={budget.period} amount_spent={budget.spent}/>
             </SwipeBudgetCard>
           );
         })}
