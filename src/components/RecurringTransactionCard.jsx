@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { categoryDict } from "@/dummydata/data";
 import { createClient } from "@/lib/supabase/client"
 import { useNavigate } from "react-router-dom";
+import {Badge} from "@/components/ui/badge";
 import RecurringTransactionForm from "@/components/RecurringTransactionForm";
 
 export default function RecurringTransactionCard(recurring_transaction) {
@@ -28,16 +29,24 @@ export default function RecurringTransactionCard(recurring_transaction) {
 
     return (
         <Card onClick={() => navigate(`/edit-recurring-transaction/${recurring_transaction.id}`)} className="p-2">
-            <div className="flex justify-between">
-                <div className = "flex items-center gap-2">
+
+                <div className = "flex items-center gap-2 w-full">
                     <img src = {categoryDict[recurring_transaction.category_id]} />
-                    <p className="text-sm font-semibold">{categories.find(c => c.id === recurring_transaction.category_id)?.category_name}</p>
-                    <p className="text-sm font-semibold">{recurring_transaction.notes}</p>
-                    <p className="text-sm text-gray-600"> ${(recurring_transaction.amount_cents/100).toFixed(2)}</p>
-                    <p className="text-sm text-gray-600"> {recurring_transaction.type}</p>
-                    <p className="text-sm text-gray-600">Recurring {recurring_transaction.recurring_duration}</p>
+                    {/*<p className="text-sm font-semibold">{categories.find(c => c.id === recurring_transaction.category_id)?.category_name}</p>*/}
+                    <p className="text-sm font-semibold mr-4">{recurring_transaction.notes}</p>
+                    
+                    {recurring_transaction.type == "expense" ? 
+                    <Badge className="bg-[var(--budget-high)] opacity-50">
+                        <p className="text-sm font-semibold"> ${(recurring_transaction.amount_cents/100).toFixed(2)}</p>
+                    </Badge> :
+                    <Badge className="bg-[var(--budget-low)] opacity-60">
+                        <p className="text-sm font-semibold"> ${(recurring_transaction.amount_cents/100).toFixed(2)}</p>
+                    </Badge> 
+                    }      
+
+                    <p className="text-sm text-gray-600 ml-auto">Every {recurring_transaction.recurring_duration}</p>
                 </div>  
-            </div>
+
         </Card>
     )
 }

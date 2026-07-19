@@ -1,4 +1,5 @@
 import {useState, useEffect, useMemo} from "react"
+import { useSearchParams } from 'react-router-dom'
 import {
   Table,
   TableBody,
@@ -36,6 +37,8 @@ export default function Transactions() {
   ]
   const supabase = createClient()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const [dateRangeFilter, setDateRangeFilter] = useState(null)
   const [transactionData, setTransactionData] = useState([])
   const [categories, setCategories] = useState([])
   const [sortField, setSortField] = useState("date")
@@ -61,7 +64,7 @@ export default function Transactions() {
       return
     }
     setCategories(data)
-    setSelectedCategories(data.map(c => c.id))
+    if (!searchParams.get('category')) setSelectedCategories(data.map(c => c.id))
   }
 
   useEffect(()=> {
@@ -84,8 +87,21 @@ export default function Transactions() {
         data.map(t => new Date(t.transaction_datetime).getMonth())
       )].sort((a, b) => a - b)
       setMonths(months)
-
   }
+
+  useEffect(() => {
+    const start = searchParams.get('start')
+    const end = searchParams.get('end')
+    const category = parseInt(searchParams.get('category'))
+
+    if (start && end) {
+      setDateRangeFilter({ start: new Date(start), end: new Date(end) })
+    }
+    if (category) {
+      setSelectedCategories([category])
+    }
+  }, [searchParams])
+
 
   function toggleCategory(id) {
     setSelectedCategories(prev => 
@@ -122,8 +138,17 @@ export default function Transactions() {
         timestamp: date.getTime(),
       }
     }).filter((t)=> {
+      const categoryMatch = selectedCategories.includes(t.category_id)
+      if (dateRangeFilter) {
+        const date = new Date(t.transaction_datetime)
+        return (
+          categoryMatch &&
+          date >= dateRangeFilter.start &&
+          date <= dateRangeFilter.end
+        )
+      }
       return (
-        selectedCategories.includes(t.category_id) &&
+        categoryMatch &&
         t.month === currentDate.getMonth() &&
         t.year === currentDate.getFullYear()
       )
@@ -141,7 +166,7 @@ export default function Transactions() {
         : b.signedAmount - a.signedAmount
       )
     }
-  }, [sortField, sortAscending, transactionData, categories, selectedCategories, currentDate])
+  }, [sortField, sortAscending, transactionData, categories, selectedCategories, currentDate, dateRangeFilter])
 
   const summary = useMemo(() => {
   let income = 0
@@ -168,13 +193,18 @@ export default function Transactions() {
 
   return (
     <div className="p-4 pb-24 overflow-y-auto">
-      <div className="flex">
         <h1 className="text-2xl font-bold mb-4 mr-4">Transactions</h1>
+        <div className="flex justify-end mb-4">
           <Popover >
             <PopoverTrigger asChild>
+              {dateRangeFilter ?
+              <Button variant="secondary" className="mr-4">
+                {formatDate(dateRangeFilter.start)} to {formatDate(dateRangeFilter.end)}
+              </Button> :
               <Button variant="secondary" className="mr-4">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </Button>
+              }
             </PopoverTrigger >
             <PopoverContent>
               <div className="flex">
@@ -183,7 +213,9 @@ export default function Transactions() {
                   <h4 className="mb-4 text-sm leading-none font-medium">Month</h4>
                   {months.map((month) => (
                     <div key={month}>
-                      <Button variant="secondary" onClick={()=>setCurrentDate(prev => {return new Date(prev.getFullYear(), month, 1)})}
+                      <Button variant="secondary" onClick={()=>{
+                        setDateRangeFilter(null)
+                        setCurrentDate(prev => {return new Date(prev.getFullYear(), month, 1)})}}
                         className={`w-full px-3 py-2 text-left
                         ${currentDate.getMonth() === month
                           ? "bg-gray-400 text-primary-foreground"
@@ -200,7 +232,9 @@ export default function Transactions() {
                   <h4 className="mb-4 text-sm leading-none font-medium">Year</h4>
                   {years.map((year) => (
                     <div key={year}>
-                      <Button variant="secondary" onClick={()=>setCurrentDate(prev => {return new Date(year, prev.getMonth(), 1)})}
+                      <Button variant="secondary" onClick={()=> {
+                        setDateRangeFilter(null)
+                        setCurrentDate(prev => {return new Date(year, prev.getMonth(), 1)})}}
                         className={`w-full px-3 py-2 text-left
                         ${currentDate.getFullYear() === year
                           ? "bg-gray-400 text-primary-foreground"
@@ -262,12 +296,12 @@ export default function Transactions() {
       >
         <div className="w-full">
           <Table>
-            <TableHeader>
+            <TableHeader >
               <TableRow>
                 <TableHead className="w-[90px]">
                   {(sortField=="date") ?
 
-                    <Button variant = "secondary" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
+                    <Button variant = "ghost" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
                     { sortAscending ? (
                       <div className="flex"><MoveUp/>Date</div>
                     ) : <div className="flex"><MoveDown/>Date</div> } 
@@ -281,7 +315,7 @@ export default function Transactions() {
                 <TableHead className="w-[180px]">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="secondary">
+                      <Button variant="ghost" className="w-full justify-start">
                         Category & Item
                       </Button>
                     </PopoverTrigger>
@@ -312,7 +346,7 @@ export default function Transactions() {
                 <TableHead className="text-left">
                   {(sortField=="amount") ?
 
-                    <Button variant = "secondary" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
+                    <Button variant = "ghost" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
                     { sortAscending ? (
                       <div className="flex"><MoveUp/>Amount</div>
                     ) : <div className="flex"><MoveDown/>Amount</div> } 
@@ -328,8 +362,8 @@ export default function Transactions() {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell colSpan={3} className="text-center">
-                  <Button onClick={() => navigate("/recurring-transactions")}>
+                <TableCell colSpan={3} className="p-0">
+                  <Button variant = "secondary" className="w-full justify-start" onClick={() => navigate("/recurring-transactions")}>
                     Recurring Transactions
                   </Button>
                 </TableCell>

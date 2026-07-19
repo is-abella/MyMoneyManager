@@ -4,9 +4,11 @@ import { useNavigate, useParams} from "react-router-dom"
 import { useState, useEffect } from "react"
 import { DURATION_CONFIG, addDuration, periodsElapsed, getCurrentPeriod, getPeriodHistory, getSpentForBudget} from "@/lib/helperFunctions";
 import BudgetCard from "@/components/BudgetCard";
+import SwipeDetailsCard from "@/components/SwipeDetailsCard";
 
 export default function BudgetDetails() {
     const {budgetID} = useParams()
+    const navigate = useNavigate()
     const supabase = createClient()
     const [budget, setBudget] = useState(null)
     const [transactions, setTransactions] = useState(null)
@@ -32,9 +34,39 @@ export default function BudgetDetails() {
         spent: getSpentForBudget(budget, period, transactions),
     }));
 
+    function handleSeeTransactions(budget, period) {
+        const params = new URLSearchParams({
+            start: period.start.toISOString(),
+            end: period.end.toISOString(),
+            category: budget.category_id, // adjust to whatever field holds the category
+        })
+        console.log(params)
+        navigate(`/transactions?${params.toString()}`)
+    }
+
     return (
-        history.map(({period, spent}) =>
-            <BudgetCard key={period.index} budget={budget} period={period} amount_spent={spent}/>
-        )
+        <div className="p-4 pb-24 overflow-y-auto">
+
+            <h1 className="text-2xl font-bold mb-4">Current Budget</h1>
+                {history.slice(0,1).map(({period, spent}) => {
+                    return (
+                        <SwipeDetailsCard key={period.index} onSeeTransactions={()=>handleSeeTransactions(budget,period)}>
+                            <BudgetCard key={period.index} budget={budget} period={period} amount_spent={spent}/>
+                        </SwipeDetailsCard>
+                    );  
+                })}
+
+            
+            <h1 className="text-2xl font-bold mb-4">Previous Budgets</h1>
+                <div className="grid grid-cols-1 gap-4">
+                {history.slice(1).map(({period, spent}) => {
+                    return (
+                        <SwipeDetailsCard key={period.index} onSeeTransactions={()=>handleSeeTransactions(budget,period)}>
+                            <BudgetCard key={period.index} budget={budget} period={period} amount_spent={spent}/>
+                        </SwipeDetailsCard>
+                    );  
+                })}
+            </div>
+        </div>
     )  
 }

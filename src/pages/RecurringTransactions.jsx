@@ -21,11 +21,13 @@ export default function RecurringTransactions() {
 
 
     return (
-        <div>
-            <h1>Recurring Transactions</h1>
-            {recurringTransactions.map((recurring_transaction) => (
-                <RecurringTransactionCard key={recurring_transaction.id} {...recurring_transaction} />
-            ))}
+        <div className="p-4 pb-24 overflow-y-auto">
+            <h1 className="text-2xl font-bold mb-4">Recurring Transactions</h1>
+            <div className="grid grid-cols-1 gap-4">
+                {recurringTransactions.map((recurring_transaction) => (
+                    <RecurringTransactionCard key={recurring_transaction.id} {...recurring_transaction} />
+                ))}
+            </div>
         </div>
     )
 }
