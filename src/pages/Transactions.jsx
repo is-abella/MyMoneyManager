@@ -303,8 +303,8 @@ export default function Transactions() {
 
                     <Button variant = "ghost" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
                     { sortAscending ? (
-                      <div className="flex"><MoveUp/>Date</div>
-                    ) : <div className="flex"><MoveDown/>Date</div> } 
+                      <div className="flex font-bold"><MoveUp/>Date</div>
+                    ) : <div className="flex font-bold"><MoveDown/>Date</div> } 
                     </Button> :
                     
                     <Button variant = "ghost" className="flex" onClick={()=> setSortField("date")}>
@@ -315,7 +315,7 @@ export default function Transactions() {
                 <TableHead className="w-[180px]">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-start">
+                      <Button variant="ghost" className="w-full justify-start font-bold">
                         Category & Item
                       </Button>
                     </PopoverTrigger>
@@ -348,11 +348,11 @@ export default function Transactions() {
 
                     <Button variant = "ghost" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
                     { sortAscending ? (
-                      <div className="flex"><MoveUp/>Amount</div>
-                    ) : <div className="flex"><MoveDown/>Amount</div> } 
+                      <div className="flex font-bold"><MoveUp/>Amount</div>
+                    ) : <div className="flex font-bold"><MoveDown/>Amount</div> } 
                     </Button> :
                     
-                    <Button variant = "ghost" className="flex" onClick={()=> setSortField("amount")}>
+                    <Button variant = "ghost" className="flex font-bold" onClick={()=> setSortField("amount")}>
                       Amount
                     </Button> 
                   }

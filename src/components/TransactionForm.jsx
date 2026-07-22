@@ -43,7 +43,7 @@ export default function TransactionForm( {
     const [categories, setCategories] = useState([])
     const [date, setDate] = useState(initialValues?.transaction_datetime ? new Date(initialValues.transaction_datetime) : new Date())
     const [selectedCategory, setSelectedCategory] = useState(null)
-    const [transactionAmount, setTransactionAmount] = useState(initialValues?.amount_cents / 100 || 0)
+    const [transactionAmount, setTransactionAmount] = useState(initialValues?.amount_cents / 100 || null)
     const [duration, setDuration] = useState(initialValues?.recurring_duration || "")
     const [isRecurring, setRecurring] = useState(initialValues?.is_recurring || false)
     const [type, setType] = useState(initialValues?.type || "")
@@ -153,18 +153,18 @@ export default function TransactionForm( {
                 <FieldGroup className="grid max-w-sm grid-cols-2 pb-5">
                     <Field>
                         <FieldLabel>Category</FieldLabel>
-                        <Drawer open = {drawerOpen} onOpenChange = {setOpen}> 
+                        <Drawer open = {drawerOpen} onOpenChange = {setOpen} > 
                             <DrawerTrigger asChild>
-                                <Button variant="outline" className = "justify-start">
+                                <Button variant="outline" className = "justify-start h-11 font-normal">
                                     {selectedCategory? 
                                     (<div className = "flex items-center gap-1.5"><img src={categoryDict[selectedCategory.id]}/><span>{selectedCategory.category_name}</span></div>) 
-                                    : ("Select Category")}
+                                    : (<div className = "text-muted-foreground">Select Category</div>)}
                                 </Button>
                             </DrawerTrigger>
                             <DrawerContent>
-                                <div className="grid grid-cols-4 gap-4 m-5">
+                                <div className="grid grid-cols-4 gap-3 m-3">
                                 {categories.map(category => (
-                                    <button className="flex flex-col items-center gap-2 border p-3"
+                                    <button className="flex flex-col items-center gap-2 border p-1.5"
                                         key={category.id}
                                         type="button"
                                         onClick={() =>{ setSelectedCategory(category) 
@@ -176,7 +176,7 @@ export default function TransactionForm( {
                                         alt={category.category_name}
                                         className="h-8 w-8"
                                     />
-                                    <span className="text-sm">
+                                    <span className="text-sm truncate w-full text-center">
                                         {category.category_name}
                                     </span>
                                     </button>
@@ -190,8 +190,8 @@ export default function TransactionForm( {
                         <FieldLabel>Amount
                             {selectedCategory && <Badge variant="secondary" className="text-xs">{type}</Badge>}
                         </FieldLabel>
-                        <Input className = "text-base" value = {transactionAmount} 
-                        onChange={(e) => setTransactionAmount(e.target.value)} placeholder="Enter amount" type="number" inputMode="numeric" step="0.01" required/>
+                        <Input className = "text-normal h-11" value = {transactionAmount} 
+                        onChange={(e) => setTransactionAmount(e.target.value)} placeholder="Enter amount" type="number" inputMode="decimal" step="0.01"/>
                     </Field>
                 </FieldGroup>
 
@@ -200,7 +200,7 @@ export default function TransactionForm( {
                         <FieldLabel>Transaction Date</FieldLabel> 
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant = "outline" className="justify-between text-left">
+                                <Button variant = "outline" className="justify-between text-left h-11 font-normal">
                                     {date ? format(date, "PPP") : <span >Pick a date</span>}
                                 </Button>
                             </PopoverTrigger >
@@ -217,7 +217,7 @@ export default function TransactionForm( {
                                   
                     <Field>
                         <FieldLabel>Notes</FieldLabel>
-                        <Input className = "text-base" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
+                        <Input className = "h-11" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
                     </Field>
                 </FieldGroup>
                 <FieldSeparator />
@@ -236,9 +236,9 @@ export default function TransactionForm( {
        
                     <Field>
                         <FieldLabel>Duration</FieldLabel>
-                        <Select value={duration} onValueChange={setDuration} disabled={!isRecurring}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder = "Select duration" />
+                        <Select value={duration} onValueChange={setDuration} disabled={!isRecurring} >
+                            <SelectTrigger className="w-full h-11">
+                                <SelectValue placeholder = "Select duration"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="1 Day">1 Day</SelectItem>
@@ -254,27 +254,33 @@ export default function TransactionForm( {
                 <FieldSeparator />
                 </div>}
 
-                <div className="mt-4 float-right">
-                    <Button type= "button" variant="outline" className="mt-4 mr-4" onClick={() => window.location.href = "/transactions"}>
-                        Cancel
-                    </Button>
 
-                { create &&
-                <Button type="submit" className="mt-4">
-                    Create Transaction
-                </Button>
-                }
-                    
-                {!create  &&
-                  <div>
-                    <Button type="button" variant="destructive" className="mt-4" onClick = {handleDelete}> 
-                        Delete 
-                    </Button>
-                    <Button type="submit" className="mt-4" disabled={!hasAnyChanges}> 
-                        Edit 
-                    </Button>
-                  </div>
-                }
+                <div className="mt-4 flex">
+                    {!create &&
+                    <div className="float-left">
+                        <Button type="button" variant="destructive" className="mt-4 transition-colors active:accent active:scale-95" onClick = {handleDelete}> 
+                            Delete 
+                        </Button>
+                    </div>
+                    }
+                
+                    <div className="ml-auto flex gap-2">
+                        <Button type= "button" variant="outline" className="mt-4 mr-4 transition-colors active:bg-accent active:scale-95" onClick={() => window.location.href = "/transactions"}>
+                            Cancel
+                        </Button>
+
+                        { create &&
+                        <Button type="submit" className="mt-4 transition-colors active:accent active:scale-95">
+                            Create Transaction
+                        </Button>
+                        }
+                            
+                        {!create  &&
+                            <Button type="submit" className="mt-4 ml-4 transition-colors active:accent active:scale-95" disabled={!hasAnyChanges}> 
+                                Edit 
+                            </Button>
+                        }
+                    </div>
                 </div>
             </form>
         </div> 
