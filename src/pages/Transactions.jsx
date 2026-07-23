@@ -24,8 +24,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { categoryDict } from "@/dummydata/data"
-import { MoveUp, MoveDown } from "lucide-react"
+import { MoveUp, MoveDown, RotateCcw } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import {KeycapButton} from "@/components/ui/keycap"
 import { motion, useMotionValue, animate } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 
@@ -198,10 +199,10 @@ export default function Transactions() {
           <Popover >
             <PopoverTrigger asChild>
               {dateRangeFilter ?
-              <Button variant="secondary" className="mr-4">
+              <Button variant="secondary" className="mr-4 text-sm font-normal">
                 {formatDate(dateRangeFilter.start)} to {formatDate(dateRangeFilter.end)}
               </Button> :
-              <Button variant="secondary" className="mr-4">
+              <Button variant="secondary" className="mr-4 text-sm font-normal">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </Button>
               }
@@ -248,9 +249,10 @@ export default function Transactions() {
             </div>
             </PopoverContent>
           </Popover>
-          <Button variant="default" onClick={() => window.location.href = "/new-transaction"}>
+          <Button className="text-sm" variant="default" onClick={() => window.location.href = "/new-transaction"}>
             New Transaction
           </Button>
+          <KeycapButton></KeycapButton>
       </div>
       
       <div className="overflow-hidden">
@@ -303,11 +305,11 @@ export default function Transactions() {
 
                     <Button variant = "ghost" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
                     { sortAscending ? (
-                      <div className="flex font-bold"><MoveUp/>Date</div>
-                    ) : <div className="flex font-bold"><MoveDown/>Date</div> } 
+                      <div className="flex text-sm font-semibold"><MoveUp/>Date</div>
+                    ) : <div className="flex text-sm font-semibold"><MoveDown/>Date</div> } 
                     </Button> :
                     
-                    <Button variant = "ghost" className="flex" onClick={()=> setSortField("date")}>
+                    <Button variant = "ghost" className="flex text-sm font-semibold" onClick={()=> setSortField("date")}>
                       Date
                     </Button> 
                   }
@@ -315,7 +317,7 @@ export default function Transactions() {
                 <TableHead className="w-[180px]">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-start font-bold">
+                      <Button variant="ghost" className="w-full justify-start text-sm font-semibold">
                         Category & Item
                       </Button>
                     </PopoverTrigger>
@@ -348,11 +350,11 @@ export default function Transactions() {
 
                     <Button variant = "ghost" className="flex" onClick={()=> setSortAscending(!sortAscending)}>
                     { sortAscending ? (
-                      <div className="flex font-bold"><MoveUp/>Amount</div>
-                    ) : <div className="flex font-bold"><MoveDown/>Amount</div> } 
+                      <div className="flex text-sm font-semibold"><MoveUp/>Amount</div>
+                    ) : <div className="flex text-sm font-semibold"><MoveDown/>Amount</div> } 
                     </Button> :
                     
-                    <Button variant = "ghost" className="flex font-bold" onClick={()=> setSortField("amount")}>
+                    <Button variant = "ghost" className="flex text-sm font-semibold" onClick={()=> setSortField("amount")}>
                       Amount
                     </Button> 
                   }
@@ -363,19 +365,19 @@ export default function Transactions() {
             <TableBody>
               <TableRow>
                 <TableCell colSpan={3} className="p-0">
-                  <Button variant = "secondary" className="w-full justify-start" onClick={() => navigate("/recurring-transactions")}>
+                  <Button variant = "secondary" className="w-full font-normal text-sm justify-start" onClick={() => navigate("/recurring-transactions")}>
                     Recurring Transactions
                   </Button>
                 </TableCell>
               </TableRow>
               {filteredTransactions.map((transaction) => {
                 return (
-                  <TableRow key={transaction.id}
+                  <TableRow key={transaction.id} className="text-sm"
                   onClick = {() => navigate(`/edit-transaction/${transaction.id}`)}>
-                    <TableCell className="font-medium">{formatDate(transaction.transaction_datetime)}</TableCell>
+                    <TableCell>{formatDate(transaction.transaction_datetime)}</TableCell>
                     <TableCell className = "flex items-center gap-1.5"><img className="w-4.5" src = {categoryDict[transaction.category_id]}/> {transaction.notes}
                       {transaction.is_recurring && transaction.recurring_id && (
-                        <Badge variant="secondary" className="text-xs">Recurring</Badge>
+                        <Badge variant="secondary" className="text-xs"><RotateCcw/></Badge>
                       )}
                       {/*!transaction.is_recurring && transaction.recurring_id && (
                         <Badge variant="destructive" className="text-xs">Recurred</Badge>
@@ -396,7 +398,7 @@ export default function Transactions() {
                 );
               })}
             </TableBody>
-            <TableFooter className="w-full">
+            <TableFooter className="w-full text-sm font-normal">
               <TableRow>
                 <TableCell colSpan={2}>Total Expenses</TableCell>
                 <TableCell>

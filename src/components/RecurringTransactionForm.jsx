@@ -149,16 +149,16 @@ export default function RecurringTransactionForm( {
                         <FieldLabel>Category</FieldLabel>
                         <Drawer open = {drawerOpen} onOpenChange = {setOpen}> 
                             <DrawerTrigger asChild>
-                                <Button variant="outline" className = "justify-start">
+                                <Button variant="outline" className = "justify-start h-11 font-normal text-base">
                                     {selectedCategory? 
                                     (<div className = "flex items-center gap-1.5"><img src={categoryDict[selectedCategory.id]}/><span>{selectedCategory.category_name}</span></div>) 
                                     : ("Select Category")}
                                 </Button>
                             </DrawerTrigger>
                             <DrawerContent>
-                                <div className="grid grid-cols-4 gap-4 m-5">
+                                <div className="grid grid-cols-4 gap-3 m-3">
                                 {categories.map(category => (
-                                    <button className="flex flex-col items-center gap-2 border p-3"
+                                    <button className="flex flex-col items-center gap-2 border p-1.5"
                                         key={category.id}
                                         type="button"
                                         onClick={() =>{ setSelectedCategory(category) 
@@ -170,7 +170,7 @@ export default function RecurringTransactionForm( {
                                         alt={category.category_name}
                                         className="h-8 w-8"
                                     />
-                                    <span className="text-sm">
+                                    <span className="text-sm truncate w-full text-center">
                                         {category.category_name}
                                     </span>
                                     </button>
@@ -184,7 +184,7 @@ export default function RecurringTransactionForm( {
                         <FieldLabel>Amount
                             {selectedCategory && <Badge variant="secondary" className="text-xs">{type}</Badge>}
                         </FieldLabel>
-                        <Input className = "text-base" value = {transactionAmount} 
+                        <Input className = "text-base h-11" value = {transactionAmount} 
                         onChange={(e) => setTransactionAmount(e.target.value)} placeholder="Enter amount" type="number" inputMode="numeric" step="0.01" required/>
                     </Field>
                 </FieldGroup>
@@ -194,7 +194,7 @@ export default function RecurringTransactionForm( {
                         <FieldLabel>Transaction Date</FieldLabel> 
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant = "outline" className="justify-between text-left">
+                                <Button variant = "outline" className="justify-between text-left h-11 text-base font-normal">
                                     {startDate ? format(startDate, "PPP") : <span >Pick a date</span>}
                                 </Button>
                             </PopoverTrigger >
@@ -211,7 +211,7 @@ export default function RecurringTransactionForm( {
                                   
                     <Field>
                         <FieldLabel>Notes</FieldLabel>
-                        <Input className = "text-base" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
+                        <Input className = "text-base font-normal h-11" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
                     </Field>
                 </FieldGroup>
                 

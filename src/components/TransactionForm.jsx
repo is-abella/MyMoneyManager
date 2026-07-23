@@ -155,7 +155,7 @@ export default function TransactionForm( {
                         <FieldLabel>Category</FieldLabel>
                         <Drawer open = {drawerOpen} onOpenChange = {setOpen} > 
                             <DrawerTrigger asChild>
-                                <Button variant="outline" className = "justify-start h-11 font-normal">
+                                <Button variant="outline" className = "justify-start h-11 font-normal text-base">
                                     {selectedCategory? 
                                     (<div className = "flex items-center gap-1.5"><img src={categoryDict[selectedCategory.id]}/><span>{selectedCategory.category_name}</span></div>) 
                                     : (<div className = "text-muted-foreground">Select Category</div>)}
@@ -190,7 +190,7 @@ export default function TransactionForm( {
                         <FieldLabel>Amount
                             {selectedCategory && <Badge variant="secondary" className="text-xs">{type}</Badge>}
                         </FieldLabel>
-                        <Input className = "text-normal h-11" value = {transactionAmount} 
+                        <Input className = "text-base font-normal h-11" value = {transactionAmount} 
                         onChange={(e) => setTransactionAmount(e.target.value)} placeholder="Enter amount" type="number" inputMode="decimal" step="0.01"/>
                     </Field>
                 </FieldGroup>
@@ -200,7 +200,7 @@ export default function TransactionForm( {
                         <FieldLabel>Transaction Date</FieldLabel> 
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant = "outline" className="justify-between text-left h-11 font-normal">
+                                <Button variant = "outline" className="justify-between text-left h-11 text-base font-normal">
                                     {date ? format(date, "PPP") : <span >Pick a date</span>}
                                 </Button>
                             </PopoverTrigger >
@@ -217,7 +217,7 @@ export default function TransactionForm( {
                                   
                     <Field>
                         <FieldLabel>Notes</FieldLabel>
-                        <Input className = "h-11" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
+                        <Input className = "h-11 font-normal text-base" value = {notes} onChange={(e) => setNotes(e.target.value)}  placeholder="Meow..." type="text"/>
                     </Field>
                 </FieldGroup>
                 <FieldSeparator />
@@ -238,7 +238,7 @@ export default function TransactionForm( {
                         <FieldLabel>Duration</FieldLabel>
                         <Select value={duration} onValueChange={setDuration} disabled={!isRecurring} >
                             <SelectTrigger className="w-full h-11">
-                                <SelectValue placeholder = "Select duration"/>
+                                <SelectValue className="font-normal text-base" placeholder = "Select duration"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="1 Day">1 Day</SelectItem>

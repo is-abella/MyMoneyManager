@@ -33,7 +33,7 @@ export default function SwipeBudgetCard({
   }
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div className="relative w-full overflow-hidden border-1">
 
       {/* BACKGROUND ACTIONS */}
       <div className="absolute inset-0.5 flex justify-end bg-gray-200">
