@@ -40,7 +40,7 @@ export default function BudgetForm( {
     const [categories, setCategories] = useState([])
     const [date, setDate] = useState(initialValues?.start_datetime ? new Date(initialValues.start_datetime) : null)
     const [selectedCategory, setSelectedCategory] = useState(null)
-    const [budgetAmount, setBudgetAmount] = useState(initialValues?.amount_cents / 100 || 0)
+    const [budgetAmount, setBudgetAmount] = useState(initialValues?.amount_cents / 100 || '')
     const [duration, setDuration] = useState(initialValues?.duration || "1 Month")
     const [isRecurring, setRecurring] = useState(initialValues?.is_recurring || false)
     const [drawerOpen, setOpen]= useState(false)
@@ -107,7 +107,7 @@ export default function BudgetForm( {
                 <FieldGroup className="max-w-sm pb-5">
                     <Field>
                         <FieldLabel>Budget Name</FieldLabel>
-                        <Input className = "text-base" value = {name} onChange={(e) => setName(e.target.value)} id="budget-name" placeholder="Meow..." type="text" required/>
+                        <Input className = "text-base font-normal h-11" value = {name} onChange={(e) => setName(e.target.value)} id="budget-name" placeholder="Meow..." type="text" required/>
                     </Field>
                 </FieldGroup>
 
@@ -116,10 +116,10 @@ export default function BudgetForm( {
                         <FieldLabel>Category</FieldLabel>
                         <Drawer open = {drawerOpen} onOpenChange = {setOpen}> 
                             <DrawerTrigger asChild>
-                                <Button variant="outline" className = "justify-start">
+                                <Button variant="outline" className = "justify-start h-11 font-normal">
                                     {selectedCategory? 
-                                    (<div className = "flex items-center gap-1.5"><img src={categoryDict[selectedCategory.id]}/><span>{selectedCategory.category_name}</span></div>) 
-                                    : ("Select Category")}
+                                    (<div className = "flex items-center text-base gap-1.5"><img src={categoryDict[selectedCategory.id]}/><span>{selectedCategory.category_name}</span></div>) 
+                                    : (<div className = "text-muted-foreground text-base font-normal">Select Category</div>)}
                                 </Button>
                             </DrawerTrigger>
                             <DrawerContent>
@@ -148,14 +148,14 @@ export default function BudgetForm( {
                     </Field>
                     <Field>
                         <FieldLabel>Amount</FieldLabel>
-                        <Input className = "text-base" value = {budgetAmount} onChange={(e) => setBudgetAmount(e.target.value)} id="budget-amount" placeholder="Enter amount" type="number" inputMode="numeric" step="0.01" required/>
+                        <Input className = "text-base font-normal h-11" value = {budgetAmount} onChange={(e) => setBudgetAmount(e.target.value)} id="budget-amount" placeholder="Enter amount" type="number" inputMode="decimal" step="0.01"/>
                     </Field>
                     <Field>
                         <FieldLabel>Start Date</FieldLabel> 
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button id="budget-start-date" variant = "outline" className="justify-between text-left">
-                                    {date ? format(date, "PPP") : <span >Pick a date</span>}
+                                <Button id="budget-start-date" variant = "outline" className="justify-between text-base font-normal text-left h-11">
+                                   {date ? (<div className="text-base">{format(date, "PPP")}</div>): (<div className = "text-muted-foreground ">Pick a Date</div>)}
                                 </Button>
                             </PopoverTrigger >
                             <PopoverContent className="w-auto p-0" align="start">
@@ -170,7 +170,7 @@ export default function BudgetForm( {
                     </Field>
                     <Field>
                         <FieldLabel>Duration</FieldLabel>
-                        <Select value={duration} onValueChange={setDuration}>
+                        <Select value={duration} onValueChange={setDuration} className="w-full">
                             <SelectTrigger id = "budget-duration" className="w-full">
                                 <SelectValue placeholder = "Select duration" />
                             </SelectTrigger>

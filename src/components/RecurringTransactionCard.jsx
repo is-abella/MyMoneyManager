@@ -33,18 +33,18 @@ export default function RecurringTransactionCard(recurring_transaction) {
                 <div className = "flex items-center gap-2 w-full">
                     <img src = {categoryDict[recurring_transaction.category_id]} />
                     {/*<p className="text-sm font-semibold">{categories.find(c => c.id === recurring_transaction.category_id)?.category_name}</p>*/}
-                    <p className="text-sm font-semibold mr-4">{recurring_transaction.notes}</p>
+                    <p className="text-sm font-semibold font-normal mr-4">{recurring_transaction.notes}</p>
                     
                     {recurring_transaction.type == "expense" ? 
-                    <Badge className="bg-[var(--budget-high)] opacity-50">
-                        <p className="text-sm font-semibold"> ${(recurring_transaction.amount_cents/100).toFixed(2)}</p>
+                    <Badge className="bg-[var(--budget-high)] opacity-40">
+                        <p className="text-sm font-normal font-semibold"> ${(recurring_transaction.amount_cents/100).toFixed(2)}</p>
                     </Badge> :
                     <Badge className="bg-[var(--budget-low)] opacity-60">
-                        <p className="text-sm font-semibold"> ${(recurring_transaction.amount_cents/100).toFixed(2)}</p>
+                        <p className="text-sm font-normal font-semibold"> ${(recurring_transaction.amount_cents/100).toFixed(2)}</p>
                     </Badge> 
                     }      
 
-                    <p className="text-sm text-gray-600 ml-auto">Every {recurring_transaction.recurring_duration}</p>
+                    <p className="text-sm font-normal ml-auto">Every {recurring_transaction.recurring_duration}</p>
                 </div>  
 
         </Card>

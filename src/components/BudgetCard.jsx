@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import { categoryDict } from "@/dummydata/data";
 import { useNavigate } from "react-router-dom";
+import {RotateCcw} from "lucide-react"
 
 
 //for each budget, query transactions matching category within timeframe. Add up total. 
@@ -38,7 +39,8 @@ export default function BudgetCard({ budget, period, amount_spent}) {
                     <p className="text-sm font-semibold">{budget.name}</p>
                     <p className="text-sm text-gray-600 align-right"> ${(budget.amount_cents/100).toFixed(2)}</p>
                     {budget.is_recurring && (
-                       <Badge variant="secondary" className="text-xs">Recurring</Badge>
+                       <Badge variant="secondary" className="text-xs">
+                        <RotateCcw/></Badge>
                     )}
                 </div>
                 <p className="text-sm text-gray-600 align-right"> {Math.round(progress * 100)}% </p>

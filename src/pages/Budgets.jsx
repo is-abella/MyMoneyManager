@@ -97,8 +97,8 @@ function Budgets() {
   const handleDeleteClick = (id) => {
     setDeleteId(id)
     setOpenDeleteDialog(true)
-
   }
+  
   const confirmDelete = async () => {
     const query = supabase
       .from("budgets")
